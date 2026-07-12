@@ -12,6 +12,7 @@ public record PetResponse(
         String description,
         PetStatus status,
         Instant createdAt,
-        Instant updatedAt
+        Instant updatedAt,
+        int pictureCount
 ) {
 }

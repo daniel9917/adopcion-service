@@ -1,0 +1,368 @@
+openapi: 3.1.0
+info:
+  title: Adoption Service API
+  description: API for managing pets, pet pictures, and adoption applications.
+  version: 1.0.0
+  contact:
+    name: Adoption Service Team
+    email: support@example.com
+servers:
+  - url: http://localhost:8080
+paths:
+  /pets:
+    get:
+      summary: List available pets
+      responses:
+        '200':
+          description: List of available pets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PetResponse'
+    post:
+      summary: Create a new pet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PetCreateRequest'
+      responses:
+        '201':
+          description: Created pet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PetResponse'
+      security:
+        - basicAuth: []
+  /pets/{petId}:
+    parameters:
+      - name: petId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+    get:
+      summary: Get pet details
+      responses:
+        '200':
+          description: Pet details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PetResponse'
+        '404':
+          description: Pet not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    patch:
+      summary: Update a pet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PetUpdateRequest'
+      responses:
+        '200':
+          description: Updated pet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PetResponse'
+        '404':
+          description: Pet not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - basicAuth: []
+  /pets/{petId}/pictures:
+    parameters:
+      - name: petId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+    get:
+      summary: List picture IDs for a pet
+      responses:
+        '200':
+          description: Picture identifiers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: integer
+                  format: int64
+        '404':
+          description: Pet not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /pets/{petId}/pictures/{pictureId}:
+    parameters:
+      - name: petId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: pictureId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+    get:
+      summary: Get a picture by ID for a pet
+      responses:
+        '200':
+          description: Picture binary data
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Picture or pet not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /applications:
+    post:
+      summary: Submit an adoption application
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplicationCreateRequest'
+      responses:
+        '201':
+          description: Created application
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdoptionApplication'
+  /applications/{applicationId}:
+    parameters:
+      - name: applicationId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+    patch:
+      summary: Update an adoption application
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplicationUpdateRequest'
+      responses:
+        '200':
+          description: Updated application
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdoptionApplication'
+        '404':
+          description: Application not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - basicAuth: []
+components:
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+  schemas:
+    PetCreateRequest:
+      type: object
+      required:
+        - name
+        - species
+        - status
+        - pictures
+      properties:
+        name:
+          type: string
+        species:
+          type: string
+        breed:
+          type: string
+          nullable: true
+        ageMonths:
+          type: integer
+          format: int32
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        status:
+          $ref: '#/components/schemas/PetStatus'
+        pictures:
+          type: array
+          items:
+            type: string
+            format: binary
+    PetUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        species:
+          type: string
+        breed:
+          type: string
+          nullable: true
+        ageMonths:
+          type: integer
+          format: int32
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        status:
+          $ref: '#/components/schemas/PetStatus'
+        pictures:
+          type: array
+          items:
+            type: string
+            format: binary
+    PetResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        species:
+          type: string
+        breed:
+          type: string
+          nullable: true
+        ageMonths:
+          type: integer
+          format: int32
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        status:
+          $ref: '#/components/schemas/PetStatus'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        pictureCount:
+          type: integer
+          format: int32
+    PetStatus:
+      type: string
+      enum:
+        - AVAILABLE
+        - PENDING
+        - ADOPTED
+    ApplicationCreateRequest:
+      type: object
+      required:
+        - petId
+        - applicantName
+        - applicantEmail
+        - applicantPhone
+      properties:
+        petId:
+          type: integer
+          format: int64
+        applicantName:
+          type: string
+        applicantEmail:
+          type: string
+          format: email
+        applicantPhone:
+          type: string
+        message:
+          type: string
+          nullable: true
+    ApplicationUpdateRequest:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          $ref: '#/components/schemas/ApplicationStatus'
+        reviewNotes:
+          type: string
+          nullable: true
+    AdoptionApplication:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        pet:
+          $ref: '#/components/schemas/PetResponse'
+        applicantName:
+          type: string
+        applicantEmail:
+          type: string
+          format: email
+        applicantPhone:
+          type: string
+        message:
+          type: string
+          nullable: true
+        status:
+          $ref: '#/components/schemas/ApplicationStatus'
+        reviewNotes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ApplicationStatus:
+      type: string
+      enum:
+        - PENDING
+        - NEEDS_INFO
+        - APPROVED
+        - REJECTED
+    ErrorResponse:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: integer
+        error:
+          type: string
+        message:
+          type: string

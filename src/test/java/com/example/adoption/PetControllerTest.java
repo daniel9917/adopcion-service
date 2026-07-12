@@ -2,6 +2,7 @@ package com.example.adoption;
 
 import com.example.adoption.domain.PetStatus;
 import com.example.adoption.model.Pet;
+import com.example.adoption.model.PetPicture;
 import com.example.adoption.repository.PetRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +35,9 @@ class PetControllerTest {
         pet.setName("Milo");
         pet.setSpecies("Cat");
         pet.setStatus(PetStatus.AVAILABLE);
+        PetPicture pic = new PetPicture();
+        pic.setData(new byte[]{1,2,3});
+        pet.addPicture(pic);
         petRepository.save(pet);
 
         mockMvc.perform(get("/pets"))

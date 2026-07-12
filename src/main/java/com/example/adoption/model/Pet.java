@@ -28,6 +28,9 @@ public class Pet {
     @Column(nullable = false)
     private PetStatus status;
 
+    @OneToMany(mappedBy = "pet", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.List<PetPicture> pictures = new java.util.ArrayList<>();
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -59,6 +62,15 @@ public class Pet {
     public void setDescription(String description) { this.description = description; }
     public PetStatus getStatus() { return status; }
     public void setStatus(PetStatus status) { this.status = status; }
+    public java.util.List<PetPicture> getPictures() { return pictures; }
+    public void addPicture(PetPicture picture) {
+        picture.setPet(this);
+        this.pictures.add(picture);
+    }
+    public void removePicture(PetPicture picture) {
+        picture.setPet(null);
+        this.pictures.remove(picture);
+    }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
 }

@@ -1,6 +1,64 @@
 # Sequence models for the adoption service
 
-This document describes the main request flows for the initial adoption service endpoints.
+This document describes the main request flows for the adoption service endpoints.
+The current domain model stores pet pictures in a separate `pet_pictures` table. Each pet can have multiple pictures and the database enforces that pets have at least one picture.
+
+## Pet / PetPicture relationship
+
+```mermaid
+classDiagram
+    Pet "1" --> "*" PetPicture
+
+    class Pet {
+      Long id
+      String name
+      String species
+      String breed
+      Integer ageMonths
+      String description
+      PetStatus status
+      Instant createdAt
+      Instant updatedAt
+    }
+    class PetPicture {
+      Long id
+      byte[] data
+      String contentType
+      Instant createdAt
+    }
+```
+
+## Database schema and migration
+
+The current implementation stores pictures in a separate `pet_pictures` table linked by `pet_id`. This supports:
+
+- one-to-many picture storage per pet
+- binary image data in `bytea`
+- optional MIME content type metadata
+- DB-level enforcement that every pet has at least one picture via migration-trigger logic
+
+```mermaid
+erDiagram
+    PETS {
+      bigint id PK
+      varchar name
+      varchar species
+      varchar breed
+      integer age_months
+      varchar description
+      varchar status
+      timestamp created_at
+      timestamp updated_at
+    }
+    PET_PICTURES {
+      bigint id PK
+      bigint pet_id FK
+      bytea data
+      varchar content_type
+      timestamp created_at
+    }
+    PETS ||--o{ PET_PICTURES : has
+```
 
 ## 1. List available pets
 
@@ -20,7 +78,7 @@ sequenceDiagram
     Repo->>DB: SELECT * FROM pets WHERE status = 'AVAILABLE'
     DB-->>Repo: Pet rows
     Repo-->>Service: List<Pet>
-    Service-->>Controller: List<Pet>
+    Service-->>Controller: List<Pet> with pictureCount
     Controller-->>Client: 200 OK + JSON list
 ```
 
@@ -58,11 +116,13 @@ sequenceDiagram
     participant Repo as PetRepository
     participant DB as Database
 
-    OrgMember->>Controller: POST /pets with pet payload
+    OrgMember->>Controller: POST /pets with pet payload and pictures
     Controller->>Service: createPet(request)
+    Service->>Service: build Pet and PetPicture entities
     Service->>Repo: save(pet)
     Repo->>DB: INSERT INTO pets (...)
-    DB-->>Repo: inserted row
+    Repo->>DB: INSERT INTO pet_pictures (...)
+    DB-->>Repo: inserted rows
     Repo-->>Service: Pet
     Service-->>Controller: Pet
     Controller-->>OrgMember: 201 Created + pet JSON
@@ -80,26 +140,76 @@ sequenceDiagram
     participant Repo as PetRepository
     participant DB as Database
 
-    OrgMember->>Controller: PATCH /pets/{petId} with changes
+    OrgMember->>Controller: PATCH /pets/{petId} with changes and optional pictures
     Controller->>Service: updatePet(petId, request)
     Service->>Repo: findById(petId)
     Repo->>DB: SELECT * FROM pets WHERE id = ?
     DB-->>Repo: Pet row
+    Service->>Service: update pet fields
+    alt pictures replaced
+        Service->>Service: clear existing PetPicture children
+        Service->>Service: add updated PetPicture entities
+    end
     Service->>Repo: save(updatedPet)
     Repo->>DB: UPDATE pets SET ...
-    DB-->>Repo: updated row
+    Repo->>DB: DELETE/INSERT pet_pictures as needed
+    DB-->>Repo: updated rows
     Repo-->>Service: Pet
     Service-->>Controller: Pet
     Controller-->>OrgMember: 200 OK + updated pet JSON
 ```
 
-## 5. Submit an adoption application
+## 5. List pictures for a pet
+
+Endpoint: GET /pets/{petId}/pictures
+
+```mermaid
+sequenceDiagram
+    actor Client
+    participant Controller as PetController
+    participant Service as PetService
+    participant Repo as PetRepository
+    participant DB as Database
+
+    Client->>Controller: GET /pets/{petId}/pictures
+    Controller->>Service: getPet(petId)
+    Service->>Repo: findById(petId)
+    Repo->>DB: SELECT * FROM pets WHERE id = ?
+    DB-->>Repo: Pet row
+    Repo-->>Service: Optional<Pet>
+    Service-->>Controller: List of picture IDs
+    Controller-->>Client: 200 OK + [pictureId,...]
+```
+
+## 6. Get a pet picture by ID
+
+Endpoint: GET /pets/{petId}/pictures/{pictureId}
+
+```mermaid
+sequenceDiagram
+    actor Client
+    participant Controller as PetController
+    participant Service as PetService
+    participant PicRepo as PetPictureRepository
+    participant DB as Database
+
+    Client->>Controller: GET /pets/{petId}/pictures/{pictureId}
+    Controller->>Service: getPetPictureEntityById(pictureId)
+    Service->>PicRepo: findById(pictureId)
+    PicRepo->>DB: SELECT * FROM pet_pictures WHERE id = ?
+    DB-->>PicRepo: picture row or null
+    PicRepo-->>Service: Optional<PetPicture>
+    Service-->>Controller: PetPicture or not found
+    Controller-->>Client: 200 OK + picture bytes / 404 Not Found
+```
+
+## 7. Submit an adoption application
 
 Endpoint: POST /applications
 
 ```mermaid
 sequenceDiagram
-    actor Client
+    actor Client as Client
     participant Controller as ApplicationController
     participant Service as ApplicationService
     participant PetRepo as PetRepository
@@ -120,7 +230,7 @@ sequenceDiagram
     Controller-->>Client: 201 Created + application JSON
 ```
 
-## 6. Review or update an application (organization)
+## 8. Review or update an application (organization)
 
 Endpoint: PATCH /applications/{applicationId}
 

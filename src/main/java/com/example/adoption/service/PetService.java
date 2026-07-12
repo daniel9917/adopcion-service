@@ -4,7 +4,9 @@ import com.example.adoption.domain.PetStatus;
 import com.example.adoption.dto.PetCreateRequest;
 import com.example.adoption.dto.PetUpdateRequest;
 import com.example.adoption.model.Pet;
+import com.example.adoption.model.PetPicture;
 import com.example.adoption.repository.PetRepository;
+import com.example.adoption.repository.PetPictureRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,9 +15,11 @@ import java.util.List;
 @Service
 public class PetService {
     private final PetRepository petRepository;
+    private final PetPictureRepository petPictureRepository;
 
-    public PetService(PetRepository petRepository) {
+    public PetService(PetRepository petRepository, PetPictureRepository petPictureRepository) {
         this.petRepository = petRepository;
+        this.petPictureRepository = petPictureRepository;
     }
 
     public List<Pet> getAvailablePets() {
@@ -35,6 +39,13 @@ public class PetService {
         pet.setAgeMonths(request.ageMonths());
         pet.setDescription(request.description());
         pet.setStatus(request.status());
+        if (request.pictures() != null) {
+            for (byte[] pic : request.pictures()) {
+                PetPicture p = new PetPicture();
+                p.setData(pic);
+                pet.addPicture(p);
+            }
+        }
         return petRepository.save(pet);
     }
 
@@ -47,6 +58,19 @@ public class PetService {
         if (request.ageMonths() != null) pet.setAgeMonths(request.ageMonths());
         if (request.description() != null) pet.setDescription(request.description());
         if (request.status() != null) pet.setStatus(request.status());
+        if (request.pictures() != null) {
+            // replace pictures
+            pet.getPictures().clear();
+            for (byte[] pic : request.pictures()) {
+                PetPicture p = new PetPicture();
+                p.setData(pic);
+                pet.addPicture(p);
+            }
+        }
         return petRepository.save(pet);
+    }
+
+    public java.util.Optional<PetPicture> getPetPictureEntityById(Long pictureId) {
+        return petPictureRepository.findById(pictureId);
     }
 }
