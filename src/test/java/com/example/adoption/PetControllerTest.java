@@ -4,6 +4,7 @@ import com.example.adoption.domain.PetStatus;
 import com.example.adoption.model.Pet;
 import com.example.adoption.model.PetPicture;
 import com.example.adoption.repository.PetRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -14,6 +15,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -28,6 +30,11 @@ class PetControllerTest {
 
     @Autowired
     private PetRepository petRepository;
+
+    @BeforeEach
+    void setUp() {
+        petRepository.deleteAll();
+    }
 
     @Test
     void shouldListAvailablePets() throws Exception {
@@ -45,5 +52,24 @@ class PetControllerTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].name").value("Milo"));
+    }
+
+    @Test
+    void shouldPatchPetWithOptionalFields() throws Exception {
+        Pet pet = new Pet();
+        pet.setName("Milo");
+        pet.setSpecies("Cat");
+        pet.setStatus(PetStatus.AVAILABLE);
+        PetPicture pic = new PetPicture();
+        pic.setData(new byte[]{1,2,3});
+        pet.addPicture(pic);
+        Pet savedPet = petRepository.save(pet);
+
+        mockMvc.perform(patch("/pets/{petId}", savedPet.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"description\":\"Updated description\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Milo"))
+                .andExpect(jsonPath("$.description").value("Updated description"));
     }
 }

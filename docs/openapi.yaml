@@ -62,13 +62,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
     patch:
-      summary: Update a pet
+      summary: Partially update a pet
+      description: >-
+        Applies a partial update to a pet. Any provided fields are updated.
+        When the pictures array is provided, it is merged with the existing picture list:
+        matching pictures remain, missing pictures are removed, and new pictures are added.
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PetUpdateRequest'
+              $ref: '#/components/schemas/PatchPetRequest'
       responses:
         '200':
           description: Updated pet
@@ -204,6 +208,15 @@ components:
         - species
         - status
         - pictures
+      example:
+        name: Milo
+        species: Cat
+        breed: Siamese
+        ageMonths: 12
+        description: Friendly cat
+        status: AVAILABLE
+        pictures:
+          - iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGMAAIAAG4hWK5AAAAAElFTkSuQmCC
       properties:
         name:
           type: string
@@ -228,6 +241,41 @@ components:
             format: binary
     PetUpdateRequest:
       type: object
+      description: >-
+        Full replacement request for a pet. All fields are required and the request replaces the pet record.
+        The pictures array replaces the existing picture list for the pet.
+      required:
+        - name
+        - species
+        - breed
+        - ageMonths
+        - description
+        - status
+        - pictures
+      properties:
+        name:
+          type: string
+        species:
+          type: string
+        breed:
+          type: string
+        ageMonths:
+          type: integer
+          format: int32
+        description:
+          type: string
+        status:
+          $ref: '#/components/schemas/PetStatus'
+        pictures:
+          type: array
+          items:
+            type: string
+            format: binary
+    PatchPetRequest:
+      type: object
+      description: >-
+        Partial update request for a pet. Any field may be omitted. When the pictures array is included,
+        it is merged with the existing picture list.
       properties:
         name:
           type: string

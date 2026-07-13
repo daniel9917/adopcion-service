@@ -1,5 +1,6 @@
 package com.example.adoption.controller;
 
+import com.example.adoption.dto.PatchPetRequest;
 import com.example.adoption.dto.PetCreateRequest;
 import com.example.adoption.dto.PetResponse;
 import com.example.adoption.dto.PetUpdateRequest;
@@ -65,8 +66,8 @@ public class PetController {
     }
 
     @PatchMapping("/{petId}")
-    public PetResponse updatePet(@PathVariable Long petId, @Valid @RequestBody PetUpdateRequest request) {
-        return toResponse(petService.updatePet(petId, request));
+    public PetResponse patchPet(@PathVariable Long petId, @Valid @RequestBody PatchPetRequest request) {
+        return toResponse(petService.patchPet(petId, request));
     }
 
     private PetResponse toResponse(Pet pet) {

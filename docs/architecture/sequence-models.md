@@ -132,6 +132,8 @@ sequenceDiagram
 
 Endpoint: PATCH /pets/{petId}
 
+The PATCH endpoint supports partial updates. When fields are provided, only those fields are changed. If a `pictures` array is supplied, the service compares it with the current picture list and then keeps matching pictures, removes missing ones, and adds new ones.
+
 ```mermaid
 sequenceDiagram
     actor OrgMember as Organization Member
@@ -145,10 +147,9 @@ sequenceDiagram
     Service->>Repo: findById(petId)
     Repo->>DB: SELECT * FROM pets WHERE id = ?
     DB-->>Repo: Pet row
-    Service->>Service: update pet fields
-    alt pictures replaced
-        Service->>Service: clear existing PetPicture children
-        Service->>Service: add updated PetPicture entities
+    Service->>Service: update provided pet fields
+    opt pictures supplied
+        Service->>Service: merge pictures with existing PetPicture children
     end
     Service->>Repo: save(updatedPet)
     Repo->>DB: UPDATE pets SET ...
