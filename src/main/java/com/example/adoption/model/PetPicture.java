@@ -3,6 +3,8 @@ package com.example.adoption.model;
 import jakarta.persistence.*;
 import java.time.Instant;
 
+import org.hibernate.annotations.JdbcTypeCode;
+
 @Entity
 @Table(name = "pet_pictures")
 public class PetPicture {
@@ -14,8 +16,10 @@ public class PetPicture {
     @JoinColumn(name = "pet_id", nullable = false)
     private Pet pet;
 
+    @Basic(fetch = FetchType.LAZY)
     @Lob
-    @Column(columnDefinition = "bytea", nullable = false)
+    @JdbcTypeCode(java.sql.Types.BINARY)
+    @Column(name = "data", nullable = false, columnDefinition = "bytea")
     private byte[] data;
 
     @Column(name = "content_type")
