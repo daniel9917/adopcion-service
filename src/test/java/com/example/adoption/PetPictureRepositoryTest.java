@@ -1,6 +1,7 @@
 package com.example.adoption;
 
 import com.example.adoption.domain.PetStatus;
+import com.example.adoption.domain.Species;
 import com.example.adoption.model.Pet;
 import com.example.adoption.model.PetPicture;
 import com.example.adoption.repository.PetPictureRepository;
@@ -28,7 +29,7 @@ class PetPictureRepositoryTest {
     void shouldPersistPetWithPicturesAndFindPictureById() {
         Pet pet = new Pet();
         pet.setName("Luna");
-        pet.setSpecies("Dog");
+        pet.setSpecies(Species.CANINE);
         pet.setStatus(PetStatus.AVAILABLE);
 
         PetPicture picture = new PetPicture();

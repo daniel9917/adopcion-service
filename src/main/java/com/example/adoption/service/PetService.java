@@ -1,17 +1,21 @@
 package com.example.adoption.service;
 
+import com.example.adoption.domain.Breed;
 import com.example.adoption.domain.PetStatus;
+import com.example.adoption.domain.Species;
 import com.example.adoption.dto.PatchPetRequest;
 import com.example.adoption.dto.PetCreateRequest;
+import com.example.adoption.dto.PetFilterRequest;
 import com.example.adoption.dto.PetUpdateRequest;
 import com.example.adoption.model.Pet;
 import com.example.adoption.model.PetPicture;
 import com.example.adoption.repository.PetRepository;
 import com.example.adoption.repository.PetPictureRepository;
+import com.example.adoption.repository.PetSpecifications;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -25,8 +29,12 @@ public class PetService {
         this.petPictureRepository = petPictureRepository;
     }
 
-    public List<Pet> getAvailablePets() {
-        return petRepository.findByStatus(PetStatus.AVAILABLE);
+    public List<Pet> searchPets(PetFilterRequest filter) {
+        Specification<Pet> spec = PetSpecifications.withFilters(
+                filter.species(), filter.breed(),
+                filter.minAgeMonths(), filter.maxAgeMonths(),
+                filter.status());
+        return petRepository.findAll(spec);
     }
 
     public Pet getPet(Long petId) {
@@ -35,6 +43,7 @@ public class PetService {
 
     @Transactional
     public Pet createPet(PetCreateRequest request) {
+        validateBreedSpecies(request.breed(), request.species());
         Pet pet = new Pet();
         pet.setName(request.name());
         pet.setSpecies(request.species());
@@ -68,6 +77,9 @@ public class PetService {
     @Transactional
     public Pet patchPet(Long petId, PatchPetRequest request) {
         Pet pet = getPet(petId);
+        Species effectiveSpecies = request.species() != null ? request.species() : pet.getSpecies();
+        Breed effectiveBreed = request.breed() != null ? request.breed() : pet.getBreed();
+        validateBreedSpecies(effectiveBreed, effectiveSpecies);
         if (request.name() != null) pet.setName(request.name());
         if (request.species() != null) pet.setSpecies(request.species());
         if (request.breed() != null) pet.setBreed(request.breed());
@@ -112,5 +124,14 @@ public class PetService {
 
     public java.util.Optional<PetPicture> getPetPictureEntityById(Long pictureId) {
         return petPictureRepository.findById(pictureId);
+    }
+
+    private void validateBreedSpecies(Breed breed, Species species) {
+        if (breed == null || species == null) return;
+        if (breed == Breed.MIXED) return;
+        if (breed.getSpecies() != species) {
+            throw new IllegalArgumentException(
+                    "Breed " + breed + " does not belong to species " + species);
+        }
     }
 }
