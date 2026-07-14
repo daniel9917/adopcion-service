@@ -52,9 +52,9 @@ VALUES
 
 INSERT INTO pets (name, species, breed, age_months, description, status)
 VALUES
-    ('Luna', 'Dog', 'Labrador', 24, 'Friendly and playful dog looking for a forever home.', 'AVAILABLE'),
-    ('Milo', 'Cat', 'Siamese', 15, 'Calm and affectionate cat that enjoys quiet spaces.', 'AVAILABLE'),
-    ('Buddy', 'Dog', 'Mixed Breed', 36, 'Energetic dog that loves outdoor walks.', 'PENDING');
+    ('Luna', 'CANINE', 'LABRADOR', 24, 'Friendly and playful dog looking for a forever home.', 'AVAILABLE'),
+    ('Milo', 'FELINE', 'SIAMESE', 15, 'Calm and affectionate cat that enjoys quiet spaces.', 'AVAILABLE'),
+    ('Buddy', 'CANINE', 'MIXED', 36, 'Energetic dog that loves outdoor walks.', 'PENDING');
 
 INSERT INTO applications (pet_id, applicant_name, applicant_email, applicant_phone, message, status)
 VALUES
