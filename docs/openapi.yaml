@@ -163,7 +163,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AdoptionApplication'
+                $ref: '#/components/schemas/ApplicationResponse'
   /applications/{applicationId}:
     parameters:
       - name: applicationId
@@ -186,7 +186,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AdoptionApplication'
+                $ref: '#/components/schemas/ApplicationResponse'
         '404':
           description: Application not found
           content:
@@ -366,14 +366,15 @@ components:
         reviewNotes:
           type: string
           nullable: true
-    AdoptionApplication:
+    ApplicationResponse:
       type: object
       properties:
         id:
           type: integer
           format: int64
-        pet:
-          $ref: '#/components/schemas/PetResponse'
+        petId:
+          type: integer
+          format: int64
         applicantName:
           type: string
         applicantEmail:

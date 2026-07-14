@@ -1,6 +1,7 @@
 package com.example.adoption.controller;
 
 import com.example.adoption.dto.ApplicationCreateRequest;
+import com.example.adoption.dto.ApplicationResponse;
 import com.example.adoption.dto.ApplicationUpdateRequest;
 import com.example.adoption.model.AdoptionApplication;
 import com.example.adoption.service.ApplicationService;
@@ -19,12 +20,12 @@ public class ApplicationController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public AdoptionApplication createApplication(@Valid @RequestBody ApplicationCreateRequest request) {
+    public ApplicationResponse createApplication(@Valid @RequestBody ApplicationCreateRequest request) {
         return applicationService.createApplication(request);
     }
 
     @PatchMapping("/{applicationId}")
-    public AdoptionApplication updateApplication(@PathVariable Long applicationId, @Valid @RequestBody ApplicationUpdateRequest request) {
+    public ApplicationResponse updateApplication(@PathVariable Long applicationId, @Valid @RequestBody ApplicationUpdateRequest request) {
         return applicationService.updateApplication(applicationId, request);
     }
 }

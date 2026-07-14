@@ -3,6 +3,7 @@ package com.example.adoption.service;
 import com.example.adoption.domain.ApplicationStatus;
 import com.example.adoption.domain.PetStatus;
 import com.example.adoption.dto.ApplicationCreateRequest;
+import com.example.adoption.dto.ApplicationResponse;
 import com.example.adoption.dto.ApplicationUpdateRequest;
 import com.example.adoption.model.AdoptionApplication;
 import com.example.adoption.model.Pet;
@@ -22,8 +23,9 @@ public class ApplicationService {
     }
 
     @Transactional
-    public AdoptionApplication createApplication(ApplicationCreateRequest request) {
-        Pet pet = petRepository.findById(request.petId()).orElseThrow(() -> new IllegalArgumentException("Pet not found"));
+    public ApplicationResponse createApplication(ApplicationCreateRequest request) {
+        Pet pet = petRepository.findById(request.petId())
+                .orElseThrow(() -> new IllegalArgumentException("Pet not found"));
         if (pet.getStatus() != PetStatus.AVAILABLE) {
             throw new IllegalStateException("Pet is not available for adoption");
         }
@@ -35,14 +37,37 @@ public class ApplicationService {
         application.setApplicantPhone(request.applicantPhone());
         application.setMessage(request.message());
         application.setStatus(ApplicationStatus.PENDING);
-        return applicationRepository.save(application);
+        AdoptionApplication savedApplication = applicationRepository.save(application);
+
+        return new ApplicationResponse(
+                savedApplication.getId(),
+                savedApplication.getPet().getId(),
+                savedApplication.getApplicantName(),
+                savedApplication.getApplicantEmail(),
+                savedApplication.getApplicantPhone(),
+                savedApplication.getMessage(),
+                savedApplication.getStatus().name(),
+                savedApplication.getCreatedAt(),
+                savedApplication.getUpdatedAt());
+
     }
 
     @Transactional
-    public AdoptionApplication updateApplication(Long applicationId, ApplicationUpdateRequest request) {
-        AdoptionApplication application = applicationRepository.findById(applicationId).orElseThrow(() -> new IllegalArgumentException("Application not found"));
+    public ApplicationResponse updateApplication(Long applicationId, ApplicationUpdateRequest request) {
+        AdoptionApplication application = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new IllegalArgumentException("Application not found"));
         application.setStatus(request.status());
         application.setReviewNotes(request.reviewNotes());
-        return applicationRepository.save(application);
+        AdoptionApplication savedApplication = applicationRepository.save(application);
+        return new ApplicationResponse(
+                savedApplication.getId(),
+                savedApplication.getPet().getId(),
+                savedApplication.getApplicantName(),
+                savedApplication.getApplicantEmail(),
+                savedApplication.getApplicantPhone(),
+                savedApplication.getMessage(),
+                savedApplication.getStatus().name(),
+                savedApplication.getCreatedAt(),
+                savedApplication.getUpdatedAt());
     }
 }
