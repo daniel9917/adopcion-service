@@ -11,10 +11,44 @@ servers:
 paths:
   /pets:
     get:
-      summary: List available pets
+      summary: List pets with optional filters
+      description: >-
+        Returns pets filtered by the provided parameters.
+        When no status parameter is provided, only AVAILABLE pets are returned.
+      parameters:
+        - name: species
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/Species'
+        - name: breed
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/Breed'
+        - name: minAgeMonths
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+          description: Minimum age in months (inclusive)
+        - name: maxAgeMonths
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+          description: Maximum age in months (inclusive)
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/PetStatus'
+          description: Pet status filter. Defaults to AVAILABLE when omitted.
       responses:
         '200':
-          description: List of available pets
+          description: Filtered list of pets
           content:
             application/json:
               schema:
@@ -210,8 +244,8 @@ components:
         - pictures
       example:
         name: Milo
-        species: Cat
-        breed: Siamese
+        species: FELINE
+        breed: SIAMESE
         ageMonths: 12
         description: Friendly cat
         status: AVAILABLE
@@ -221,9 +255,9 @@ components:
         name:
           type: string
         species:
-          type: string
+          $ref: '#/components/schemas/Species'
         breed:
-          type: string
+          $ref: '#/components/schemas/Breed'
           nullable: true
         ageMonths:
           type: integer
@@ -256,9 +290,9 @@ components:
         name:
           type: string
         species:
-          type: string
+          $ref: '#/components/schemas/Species'
         breed:
-          type: string
+          $ref: '#/components/schemas/Breed'
         ageMonths:
           type: integer
           format: int32
@@ -280,9 +314,9 @@ components:
         name:
           type: string
         species:
-          type: string
+          $ref: '#/components/schemas/Species'
         breed:
-          type: string
+          $ref: '#/components/schemas/Breed'
           nullable: true
         ageMonths:
           type: integer
@@ -307,9 +341,9 @@ components:
         name:
           type: string
         species:
-          type: string
+          $ref: '#/components/schemas/Species'
         breed:
-          type: string
+          $ref: '#/components/schemas/Breed'
           nullable: true
         ageMonths:
           type: integer
@@ -335,6 +369,30 @@ components:
         - AVAILABLE
         - PENDING
         - ADOPTED
+    Species:
+      type: string
+      enum:
+        - FELINE
+        - CANINE
+    Breed:
+      type: string
+      enum:
+        - SIAMESE
+        - PERSIAN
+        - MAINE_COON
+        - RAGDOLL
+        - BENGAL
+        - BRITISH_SHORTHAIR
+        - ABYSSINIAN
+        - RUSSIAN_BLUE
+        - LABRADOR
+        - GERMAN_SHEPHERD
+        - POODLE
+        - BULLDOG
+        - BEAGLE
+        - GOLDEN_RETRIEVER
+        - FRENCH_BULLDOG
+        - MIXED
     ApplicationCreateRequest:
       type: object
       required:
