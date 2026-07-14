@@ -1,6 +1,8 @@
 package com.example.adoption.model;
 
+import com.example.adoption.domain.Breed;
 import com.example.adoption.domain.PetStatus;
+import com.example.adoption.domain.Species;
 import jakarta.persistence.*;
 import java.time.Instant;
 
@@ -14,10 +16,12 @@ public class Pet {
     @Column(nullable = false)
     private String name;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String species;
+    private Species species;
 
-    private String breed;
+    @Enumerated(EnumType.STRING)
+    private Breed breed;
 
     private Integer ageMonths;
 
@@ -52,10 +56,10 @@ public class Pet {
     public Long getId() { return id; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
-    public String getSpecies() { return species; }
-    public void setSpecies(String species) { this.species = species; }
-    public String getBreed() { return breed; }
-    public void setBreed(String breed) { this.breed = breed; }
+    public Species getSpecies() { return species; }
+    public void setSpecies(Species species) { this.species = species; }
+    public Breed getBreed() { return breed; }
+    public void setBreed(Breed breed) { this.breed = breed; }
     public Integer getAgeMonths() { return ageMonths; }
     public void setAgeMonths(Integer ageMonths) { this.ageMonths = ageMonths; }
     public String getDescription() { return description; }

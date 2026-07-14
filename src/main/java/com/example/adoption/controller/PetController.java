@@ -1,9 +1,12 @@
 package com.example.adoption.controller;
 
+import com.example.adoption.domain.Breed;
+import com.example.adoption.domain.PetStatus;
+import com.example.adoption.domain.Species;
 import com.example.adoption.dto.PatchPetRequest;
 import com.example.adoption.dto.PetCreateRequest;
+import com.example.adoption.dto.PetFilterRequest;
 import com.example.adoption.dto.PetResponse;
-import com.example.adoption.dto.PetUpdateRequest;
 import com.example.adoption.model.Pet;
 import com.example.adoption.service.PetService;
 import jakarta.validation.Valid;
@@ -22,8 +25,15 @@ public class PetController {
     }
 
     @GetMapping
-    public List<PetResponse> listAvailablePets() {
-        return petService.getAvailablePets().stream().map(this::toResponse).toList();
+    public List<PetResponse> listPets(
+            @RequestParam(required = false) Species species,
+            @RequestParam(required = false) Breed breed,
+            @RequestParam(required = false) Integer minAgeMonths,
+            @RequestParam(required = false) Integer maxAgeMonths,
+            @RequestParam(required = false) PetStatus status) {
+        PetStatus effectiveStatus = (status != null) ? status : PetStatus.AVAILABLE;
+        PetFilterRequest filter = new PetFilterRequest(species, breed, minAgeMonths, maxAgeMonths, effectiveStatus);
+        return petService.searchPets(filter).stream().map(this::toResponse).toList();
     }
 
     @GetMapping("/{petId}")

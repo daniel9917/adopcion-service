@@ -3,15 +3,12 @@ package com.example.adoption.dto;
 import com.example.adoption.domain.Breed;
 import com.example.adoption.domain.PetStatus;
 import com.example.adoption.domain.Species;
-import java.util.List;
 
-public record PatchPetRequest(
-        String name,
+public record PetFilterRequest(
         Species species,
         Breed breed,
-        Integer ageMonths,
-        String description,
-        PetStatus status,
-        List<byte[]> pictures
+        Integer minAgeMonths,
+        Integer maxAgeMonths,
+        PetStatus status
 ) {
 }
