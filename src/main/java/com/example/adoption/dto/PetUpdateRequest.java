@@ -1,6 +1,7 @@
 package com.example.adoption.dto;
 
 import com.example.adoption.domain.Breed;
+import com.example.adoption.domain.PetSex;
 import com.example.adoption.domain.PetStatus;
 import com.example.adoption.domain.Species;
 import jakarta.validation.constraints.NotBlank;
@@ -13,6 +14,7 @@ public record PetUpdateRequest(
         @NotBlank String name,
         @NotNull Species species,
         @NotNull Breed breed,
+        @NotNull PetSex sex,
         @NotNull Integer ageMonths,
         @NotBlank String description,
         @NotNull PetStatus status,

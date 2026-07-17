@@ -1,5 +1,6 @@
 package com.example.adoption;
 
+import com.example.adoption.domain.PetSex;
 import com.example.adoption.domain.PetStatus;
 import com.example.adoption.domain.Species;
 import com.example.adoption.model.Pet;
@@ -30,6 +31,7 @@ class PetPictureRepositoryTest {
         Pet pet = new Pet();
         pet.setName("Luna");
         pet.setSpecies(Species.CANINE);
+        pet.setSex(PetSex.FEMALE);
         pet.setStatus(PetStatus.AVAILABLE);
 
         PetPicture picture = new PetPicture();

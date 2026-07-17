@@ -1,6 +1,7 @@
 package com.example.adoption.model;
 
 import com.example.adoption.domain.Breed;
+import com.example.adoption.domain.PetSex;
 import com.example.adoption.domain.PetStatus;
 import com.example.adoption.domain.Species;
 import jakarta.persistence.*;
@@ -22,6 +23,10 @@ public class Pet {
 
     @Enumerated(EnumType.STRING)
     private Breed breed;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PetSex sex;
 
     private Integer ageMonths;
 
@@ -63,6 +68,8 @@ public class Pet {
     public void setSpecies(Species species) { this.species = species; }
     public Breed getBreed() { return breed; }
     public void setBreed(Breed breed) { this.breed = breed; }
+    public PetSex getSex() { return sex; }
+    public void setSex(PetSex sex) { this.sex = sex; }
     public Integer getAgeMonths() { return ageMonths; }
     public void setAgeMonths(Integer ageMonths) { this.ageMonths = ageMonths; }
     public String getDescription() { return description; }

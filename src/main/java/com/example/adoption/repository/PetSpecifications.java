@@ -1,6 +1,7 @@
 package com.example.adoption.repository;
 
 import com.example.adoption.domain.Breed;
+import com.example.adoption.domain.PetSex;
 import com.example.adoption.domain.PetStatus;
 import com.example.adoption.domain.Species;
 import com.example.adoption.model.Pet;
@@ -19,7 +20,7 @@ public final class PetSpecifications {
     private PetSpecifications() {
     }
 
-    public static Specification<Pet> withFilters(Species species, Breed breed,
+    public static Specification<Pet> withFilters(Species species, Breed breed, PetSex sex,
             Integer minAgeMonths, Integer maxAgeMonths,
             PetStatus status, Boolean hasSpecialConditions) {
         return (root, query, cb) -> {
@@ -30,6 +31,9 @@ public final class PetSpecifications {
             }
             if (breed != null) {
                 predicates.add(cb.equal(root.get("breed"), breed));
+            }
+            if (sex != null) {
+                predicates.add(cb.equal(root.get("sex"), sex));
             }
             if (status != null) {
                 predicates.add(cb.equal(root.get("status"), status));

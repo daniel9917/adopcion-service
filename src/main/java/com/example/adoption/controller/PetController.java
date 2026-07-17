@@ -1,6 +1,7 @@
 package com.example.adoption.controller;
 
 import com.example.adoption.domain.Breed;
+import com.example.adoption.domain.PetSex;
 import com.example.adoption.domain.PetStatus;
 import com.example.adoption.domain.Species;
 import com.example.adoption.dto.PatchPetRequest;
@@ -28,12 +29,13 @@ public class PetController {
     public List<PetResponse> listPets(
             @RequestParam(required = false) Species species,
             @RequestParam(required = false) Breed breed,
+            @RequestParam(required = false) PetSex sex,
             @RequestParam(required = false) Integer minAgeMonths,
             @RequestParam(required = false) Integer maxAgeMonths,
             @RequestParam(required = false) PetStatus status,
             @RequestParam(required = false) Boolean hasSpecialCondition) {
         PetStatus effectiveStatus = (status != null) ? status : PetStatus.AVAILABLE;
-        PetFilterRequest filter = new PetFilterRequest(species, breed, minAgeMonths, maxAgeMonths, effectiveStatus, hasSpecialCondition);
+        PetFilterRequest filter = new PetFilterRequest(species, breed, sex, minAgeMonths, maxAgeMonths, effectiveStatus, hasSpecialCondition);
         return petService.searchPets(filter).stream().map(this::toResponse).toList();
     }
 
@@ -87,6 +89,7 @@ public class PetController {
                 pet.getName(),
                 pet.getSpecies(),
                 pet.getBreed(),
+                pet.getSex(),
                 pet.getAgeMonths(),
                 pet.getDescription(),
                 pet.getStatus(),

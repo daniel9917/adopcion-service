@@ -26,6 +26,12 @@ paths:
           required: false
           schema:
             $ref: '#/components/schemas/Breed'
+        - name: sex
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/PetSex'
+          description: Filter by pet sex
         - name: minAgeMonths
           in: query
           required: false
@@ -240,6 +246,7 @@ components:
       required:
         - name
         - species
+        - sex
         - status
         - pictures
       example:
@@ -284,6 +291,7 @@ components:
         - name
         - species
         - breed
+        - sex
         - ageMonths
         - description
         - status
@@ -295,6 +303,8 @@ components:
           $ref: '#/components/schemas/Species'
         breed:
           $ref: '#/components/schemas/Breed'
+        sex:
+          $ref: '#/components/schemas/PetSex'
         ageMonths:
           type: integer
           format: int32
@@ -320,6 +330,8 @@ components:
         breed:
           $ref: '#/components/schemas/Breed'
           nullable: true
+        sex:
+          $ref: '#/components/schemas/PetSex'
         ageMonths:
           type: integer
           format: int32
@@ -347,6 +359,8 @@ components:
         breed:
           $ref: '#/components/schemas/Breed'
           nullable: true
+        sex:
+          $ref: '#/components/schemas/PetSex'
         ageMonths:
           type: integer
           format: int32
@@ -374,6 +388,12 @@ components:
         - AVAILABLE
         - PENDING
         - ADOPTED
+    PetSex:
+      type: string
+      enum:
+        - MALE
+        - FEMALE
+        - UNKNOWN
     Species:
       type: string
       enum:

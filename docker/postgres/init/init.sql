@@ -12,6 +12,8 @@ CREATE TABLE IF NOT EXISTS pets (
     name VARCHAR(100) NOT NULL,
     species VARCHAR(50) NOT NULL,
     breed VARCHAR(100),
+    sex VARCHAR(20) NOT NULL DEFAULT 'UNKNOWN'
+        CHECK (sex IN ('MALE', 'FEMALE', 'UNKNOWN')),
     age_months INTEGER,
     description TEXT,
     status VARCHAR(20) NOT NULL DEFAULT 'AVAILABLE'
@@ -57,11 +59,11 @@ INSERT INTO users (email, password_hash, role)
 VALUES
     ('org@example.com', '$2a$10$placeholder.hash', 'ORG_MEMBER');
 
-INSERT INTO pets (name, species, breed, age_months, description, status)
+INSERT INTO pets (name, species, breed, sex, age_months, description, status)
 VALUES
-    ('Luna', 'CANINE', 'LABRADOR', 24, 'Friendly and playful dog looking for a forever home.', 'AVAILABLE'),
-    ('Milo', 'FELINE', 'SIAMESE', 15, 'Calm and affectionate cat that enjoys quiet spaces.', 'AVAILABLE'),
-    ('Buddy', 'CANINE', 'MIXED', 36, 'Energetic dog that loves outdoor walks.', 'PENDING');
+    ('Luna', 'CANINE', 'LABRADOR', 'FEMALE', 24, 'Friendly and playful dog looking for a forever home.', 'AVAILABLE'),
+    ('Milo', 'FELINE', 'SIAMESE', 'MALE', 15, 'Calm and affectionate cat that enjoys quiet spaces.', 'AVAILABLE'),
+    ('Buddy', 'CANINE', 'MIXED', 'MALE', 36, 'Energetic dog that loves outdoor walks.', 'PENDING');
 
 INSERT INTO applications (pet_id, applicant_name, applicant_email, applicant_phone, message, status)
 VALUES

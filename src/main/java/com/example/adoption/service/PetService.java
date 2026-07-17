@@ -1,7 +1,6 @@
 package com.example.adoption.service;
 
 import com.example.adoption.domain.Breed;
-import com.example.adoption.domain.PetStatus;
 import com.example.adoption.domain.Species;
 import com.example.adoption.dto.PatchPetRequest;
 import com.example.adoption.dto.PetCreateRequest;
@@ -38,7 +37,7 @@ public class PetService {
 
     public List<Pet> searchPets(PetFilterRequest filter) {
         Specification<Pet> spec = PetSpecifications.withFilters(
-                filter.species(), filter.breed(),
+                filter.species(), filter.breed(), filter.sex(),
                 filter.minAgeMonths(), filter.maxAgeMonths(),
                 filter.status(), filter.hasSpecialCondtions());
         return petRepository.findAll(spec);
@@ -55,6 +54,7 @@ public class PetService {
         pet.setName(request.name());
         pet.setSpecies(request.species());
         pet.setBreed(request.breed());
+        pet.setSex(request.sex());
         pet.setAgeMonths(request.ageMonths());
         pet.setDescription(request.description());
         pet.setStatus(request.status());
@@ -81,6 +81,7 @@ public class PetService {
         pet.setName(request.name());
         pet.setSpecies(request.species());
         pet.setBreed(request.breed());
+        pet.setSex(request.sex());
         pet.setAgeMonths(request.ageMonths());
         pet.setDescription(request.description());
         pet.setStatus(request.status());
@@ -97,6 +98,7 @@ public class PetService {
         if (request.name() != null) pet.setName(request.name());
         if (request.species() != null) pet.setSpecies(request.species());
         if (request.breed() != null) pet.setBreed(request.breed());
+        if (request.sex() != null) pet.setSex(request.sex());
         if (request.ageMonths() != null) pet.setAgeMonths(request.ageMonths());
         if (request.description() != null) pet.setDescription(request.description());
         if (request.status() != null) pet.setStatus(request.status());
