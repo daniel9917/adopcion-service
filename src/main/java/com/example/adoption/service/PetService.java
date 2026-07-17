@@ -9,7 +9,9 @@ import com.example.adoption.dto.PetFilterRequest;
 import com.example.adoption.dto.PetUpdateRequest;
 import com.example.adoption.model.Pet;
 import com.example.adoption.model.PetPicture;
+import com.example.adoption.model.PetSpecialCondition;
 import com.example.adoption.repository.PetRepository;
+import com.example.adoption.repository.PetSpecialConditionRepository;
 import com.example.adoption.repository.PetPictureRepository;
 import com.example.adoption.repository.PetSpecifications;
 import org.springframework.data.jpa.domain.Specification;
@@ -23,17 +25,22 @@ import java.util.Objects;
 public class PetService {
     private final PetRepository petRepository;
     private final PetPictureRepository petPictureRepository;
+    private final PetSpecialConditionRepository petSpecialConditionRepository;
 
-    public PetService(PetRepository petRepository, PetPictureRepository petPictureRepository) {
+    public PetService(
+        PetRepository petRepository, 
+        PetPictureRepository petPictureRepository, 
+        PetSpecialConditionRepository petSpecialConditionRepository) {
         this.petRepository = petRepository;
         this.petPictureRepository = petPictureRepository;
+        this.petSpecialConditionRepository = petSpecialConditionRepository;
     }
 
     public List<Pet> searchPets(PetFilterRequest filter) {
         Specification<Pet> spec = PetSpecifications.withFilters(
                 filter.species(), filter.breed(),
                 filter.minAgeMonths(), filter.maxAgeMonths(),
-                filter.status());
+                filter.status(), filter.hasSpecialCondtions());
         return petRepository.findAll(spec);
     }
 
@@ -56,6 +63,13 @@ public class PetService {
                 PetPicture p = new PetPicture();
                 p.setData(pic);
                 pet.addPicture(p);
+            }
+        }
+        if (request.specialConditions() != null) {
+            for (String condition : request.specialConditions()) {
+                com.example.adoption.model.PetSpecialCondition sc = new com.example.adoption.model.PetSpecialCondition();
+                sc.setCondition(condition);
+                pet.addSpecialCondition(sc);
             }
         }
         return petRepository.save(pet);
@@ -88,6 +102,9 @@ public class PetService {
         if (request.status() != null) pet.setStatus(request.status());
         if (request.pictures() != null) {
             mergePictures(pet, request.pictures());
+        }
+        if(request.specialConditions() != null) {
+            mergeConditions (pet, request.specialConditions());
         }
         return petRepository.save(pet);
     }
@@ -126,12 +143,37 @@ public class PetService {
         return petPictureRepository.findById(pictureId);
     }
 
+    public java.util.Optional<PetSpecialCondition> getPetSpecialConditionEntityById(Long specialConditionId) {
+        return petSpecialConditionRepository.findById(specialConditionId);
+    }
+
     private void validateBreedSpecies(Breed breed, Species species) {
         if (breed == null || species == null) return;
         if (breed == Breed.MIXED) return;
         if (breed.getSpecies() != species) {
             throw new IllegalArgumentException(
                     "Breed " + breed + " does not belong to species " + species);
+        }
+    }
+
+    private void mergeConditions(Pet pet, List<String> incomingConditions) {
+        List<String> currentConditions = pet.getSpecialConditions().stream()
+                .map(com.example.adoption.model.PetSpecialCondition::getCondition)
+                .toList();
+
+        List<com.example.adoption.model.PetSpecialCondition> conditionsToRemove = pet.getSpecialConditions().stream()
+                .filter(existing -> incomingConditions.stream().noneMatch(cond -> cond.equals(existing.getCondition())))
+                .toList();
+
+        conditionsToRemove.forEach(pet::removeSpecialCondition);
+
+        for (String condition : incomingConditions) {
+            boolean exists = currentConditions.stream().anyMatch(existing -> existing.equals(condition));
+            if (!exists) {
+                com.example.adoption.model.PetSpecialCondition sc = new com.example.adoption.model.PetSpecialCondition();
+                sc.setCondition(condition);
+                pet.addSpecialCondition(sc);
+            }
         }
     }
 }

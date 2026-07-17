@@ -12,6 +12,7 @@ public record PatchPetRequest(
         Integer ageMonths,
         String description,
         PetStatus status,
-        List<byte[]> pictures
+        List<byte[]> pictures,
+        List<String> specialConditions
 ) {
 }

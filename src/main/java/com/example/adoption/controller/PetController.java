@@ -30,9 +30,10 @@ public class PetController {
             @RequestParam(required = false) Breed breed,
             @RequestParam(required = false) Integer minAgeMonths,
             @RequestParam(required = false) Integer maxAgeMonths,
-            @RequestParam(required = false) PetStatus status) {
+            @RequestParam(required = false) PetStatus status,
+            @RequestParam(required = false) Boolean hasSpecialCondition) {
         PetStatus effectiveStatus = (status != null) ? status : PetStatus.AVAILABLE;
-        PetFilterRequest filter = new PetFilterRequest(species, breed, minAgeMonths, maxAgeMonths, effectiveStatus);
+        PetFilterRequest filter = new PetFilterRequest(species, breed, minAgeMonths, maxAgeMonths, effectiveStatus, hasSpecialCondition);
         return petService.searchPets(filter).stream().map(this::toResponse).toList();
     }
 
@@ -91,7 +92,8 @@ public class PetController {
                 pet.getStatus(),
                 pet.getCreatedAt(),
                 pet.getUpdatedAt(),
-                pet.getPictures() == null ? 0 : pet.getPictures().size()
+                pet.getPictures() == null ? 0 : pet.getPictures().size(),
+                pet.getSpecialConditions() == null ? 0 : pet.getSpecialConditions().size()
         );
     }
 }

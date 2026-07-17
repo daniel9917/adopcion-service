@@ -9,6 +9,7 @@ public record PetFilterRequest(
         Breed breed,
         Integer minAgeMonths,
         Integer maxAgeMonths,
-        PetStatus status
+        PetStatus status,
+        Boolean hasSpecialCondtions
 ) {
 }

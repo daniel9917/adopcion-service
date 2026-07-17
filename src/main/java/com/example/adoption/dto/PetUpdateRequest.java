@@ -8,6 +8,7 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
+/** Wont yet be implemented, just patch for now. */
 public record PetUpdateRequest(
         @NotBlank String name,
         @NotNull Species species,

@@ -251,6 +251,8 @@ components:
         status: AVAILABLE
         pictures:
           - iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGMAAIAAG4hWK5AAAAAElFTkSuQmCC
+        specialConditions:
+          - Three legs
       properties:
         name:
           type: string
@@ -361,6 +363,9 @@ components:
           type: string
           format: date-time
         pictureCount:
+          type: integer
+          format: int32
+        conditionsCount:
           type: integer
           format: int32
     PetStatus:

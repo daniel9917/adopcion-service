@@ -35,6 +35,9 @@ public class Pet {
     @OneToMany(mappedBy = "pet", cascade = CascadeType.ALL, orphanRemoval = true)
     private java.util.List<PetPicture> pictures = new java.util.ArrayList<>();
 
+    @OneToMany(mappedBy = "pet", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.List<PetSpecialCondition> specialConditions = new java.util.ArrayList<>();
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -74,6 +77,15 @@ public class Pet {
     public void removePicture(PetPicture picture) {
         picture.setPet(null);
         this.pictures.remove(picture);
+    }
+    public java.util.List<PetSpecialCondition> getSpecialConditions() { return specialConditions; }
+    public void addSpecialCondition(PetSpecialCondition condition) {
+        condition.setPet(this);
+        this.specialConditions.add(condition);  
+    }
+    public void removeSpecialCondition(PetSpecialCondition condition) {
+        condition.setPet(null);
+        this.specialConditions.remove(condition);
     }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }

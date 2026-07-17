@@ -15,6 +15,7 @@ public record PetResponse(
         PetStatus status,
         Instant createdAt,
         Instant updatedAt,
-        int pictureCount
+        int pictureCount,
+        int conditionsCount
 ) {
 }

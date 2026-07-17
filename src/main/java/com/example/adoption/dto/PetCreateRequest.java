@@ -15,6 +15,7 @@ public record PetCreateRequest(
         Integer ageMonths,
         String description,
         @NotNull PetStatus status,
-        @NotEmpty List<byte[]> pictures
+        @NotEmpty List<byte[]> pictures,
+        List<String> specialConditions
 ) {
 }
