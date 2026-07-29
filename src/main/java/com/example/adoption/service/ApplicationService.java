@@ -7,8 +7,10 @@ import com.example.adoption.dto.ApplicationResponse;
 import com.example.adoption.dto.ApplicationUpdateRequest;
 import com.example.adoption.model.AdoptionApplication;
 import com.example.adoption.model.Pet;
+import com.example.adoption.model.User;
 import com.example.adoption.repository.ApplicationRepository;
 import com.example.adoption.repository.PetRepository;
+import com.example.adoption.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,10 +18,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class ApplicationService {
     private final ApplicationRepository applicationRepository;
     private final PetRepository petRepository;
+    private final UserRepository userRepository;
 
-    public ApplicationService(ApplicationRepository applicationRepository, PetRepository petRepository) {
+    public ApplicationService(ApplicationRepository applicationRepository, PetRepository petRepository, UserRepository userRepository) {
         this.applicationRepository = applicationRepository;
         this.petRepository = petRepository;
+        this.userRepository = userRepository;
     }
 
     @Transactional
@@ -30,8 +34,12 @@ public class ApplicationService {
             throw new IllegalStateException("Pet is not available for adoption");
         }
 
+        User user = userRepository.findById(request.userId())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
         AdoptionApplication application = new AdoptionApplication();
         application.setPet(pet);
+        application.setUser(user);
         application.setApplicantName(request.applicantName());
         application.setApplicantEmail(request.applicantEmail());
         application.setApplicantPhone(request.applicantPhone());
@@ -41,6 +49,7 @@ public class ApplicationService {
 
         return new ApplicationResponse(
                 savedApplication.getId(),
+                savedApplication.getUser().getId(),
                 savedApplication.getPet().getId(),
                 savedApplication.getApplicantName(),
                 savedApplication.getApplicantEmail(),
@@ -61,6 +70,7 @@ public class ApplicationService {
         AdoptionApplication savedApplication = applicationRepository.save(application);
         return new ApplicationResponse(
                 savedApplication.getId(),
+                savedApplication.getUser().getId(),
                 savedApplication.getPet().getId(),
                 savedApplication.getApplicantName(),
                 savedApplication.getApplicantEmail(),

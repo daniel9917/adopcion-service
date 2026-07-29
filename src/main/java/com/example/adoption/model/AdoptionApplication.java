@@ -15,6 +15,10 @@ public class AdoptionApplication {
     @JoinColumn(name = "pet_id", nullable = false)
     private Pet pet;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
     @Column(name = "applicant_name", nullable = false)
     private String applicantName;
 
@@ -55,6 +59,8 @@ public class AdoptionApplication {
     public Long getId() { return id; }
     public Pet getPet() { return pet; }
     public void setPet(Pet pet) { this.pet = pet; }
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
     public String getApplicantName() { return applicantName; }
     public void setApplicantName(String applicantName) { this.applicantName = applicantName; }
     public String getApplicantEmail() { return applicantEmail; }

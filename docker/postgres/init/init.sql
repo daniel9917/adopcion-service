@@ -1,8 +1,12 @@
 CREATE TABLE IF NOT EXISTS users (
     id BIGSERIAL PRIMARY KEY,
+    user_type VARCHAR(20) NOT NULL CHECK (user_type IN ('REGULAR', 'ORGANIZATION')),
+    name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
-    role VARCHAR(20) NOT NULL CHECK (role IN ('CLIENT', 'ORG_MEMBER')),
+    password VARCHAR(255) NOT NULL,
+    city VARCHAR(100) NOT NULL,
+    phone_number VARCHAR(30) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -40,6 +44,7 @@ CREATE TABLE IF NOT EXISTS pet_special_conditions (
 CREATE TABLE IF NOT EXISTS applications (
     id BIGSERIAL PRIMARY KEY,
     pet_id BIGINT NOT NULL REFERENCES pets(id) ON DELETE RESTRICT,
+    user_id BIGINT NOT NULL REFERENCES users(id),
     applicant_name VARCHAR(100) NOT NULL,
     applicant_email VARCHAR(255) NOT NULL,
     applicant_phone VARCHAR(30) NOT NULL,
@@ -52,12 +57,14 @@ CREATE TABLE IF NOT EXISTS applications (
 );
 
 CREATE INDEX IF NOT EXISTS idx_pets_status ON pets(status);
+CREATE INDEX IF NOT EXISTS idx_applications_user_id ON applications(user_id);
 CREATE INDEX IF NOT EXISTS idx_applications_pet_id ON applications(pet_id);
 CREATE INDEX IF NOT EXISTS idx_applications_status ON applications(status);
 
-INSERT INTO users (email, password_hash, role)
+INSERT INTO users (user_type, name, last_name, email, password, city, phone_number)
 VALUES
-    ('org@example.com', '$2a$10$placeholder.hash', 'ORG_MEMBER');
+    ('ORGANIZATION', 'Ana', 'Gomez', 'org@example.com', '$2a$10$0EUhQosrKbTutfjLCdP2z.gY9nenjkWexbGUYI/bcDlslzR8BK.OG', 'Bogota', '+57 1 5555-1234'),
+    ('REGULAR', 'Carlos', 'Lopez', 'carlos@example.com', '$2a$10$0EUhQosrKbTutfjLCdP2z.gY9nenjkWexbGUYI/bcDlslzR8BK.OG', 'Medellin', '+57 4 5555-5678');
 
 INSERT INTO pets (name, species, breed, sex, age_months, description, status)
 VALUES
@@ -65,6 +72,6 @@ VALUES
     ('Milo', 'FELINE', 'SIAMESE', 'MALE', 15, 'Calm and affectionate cat that enjoys quiet spaces.', 'AVAILABLE'),
     ('Buddy', 'CANINE', 'MIXED', 'MALE', 36, 'Energetic dog that loves outdoor walks.', 'PENDING');
 
-INSERT INTO applications (pet_id, applicant_name, applicant_email, applicant_phone, message, status)
+INSERT INTO applications (pet_id, user_id, applicant_name, applicant_email, applicant_phone, message, status)
 VALUES
-    (1, 'Ana Gomez', 'ana@example.com', '+54 11 5555-1234', 'I would love to adopt Luna.', 'PENDING');
+    (1, 2, 'Ana Gomez', 'ana@example.com', '+54 11 5555-1234', 'I would love to adopt Luna.', 'PENDING');
