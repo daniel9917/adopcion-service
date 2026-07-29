@@ -1,5 +1,6 @@
 package com.example.adoption.controller;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -33,5 +34,15 @@ public class GlobalExceptionHandler {
         body.put("error", "Business error");
         body.put("message", ex.getMessage());
         return ResponseEntity.badRequest().body(body);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, Object>> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", Instant.now());
+        body.put("status", HttpStatus.CONFLICT.value());
+        body.put("error", "Data integrity violation");
+        body.put("message", "Operation would violate a data constraint");
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
 }

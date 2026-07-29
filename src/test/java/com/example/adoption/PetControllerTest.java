@@ -6,6 +6,7 @@ import com.example.adoption.domain.PetStatus;
 import com.example.adoption.domain.Species;
 import com.example.adoption.model.Pet;
 import com.example.adoption.model.PetPicture;
+import com.example.adoption.repository.ApplicationRepository;
 import com.example.adoption.repository.PetRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,8 +35,12 @@ class PetControllerTest {
     @Autowired
     private PetRepository petRepository;
 
+    @Autowired
+    private ApplicationRepository applicationRepository;
+
     @BeforeEach
     void setUp() {
+        applicationRepository.deleteAll();
         petRepository.deleteAll();
     }
 
