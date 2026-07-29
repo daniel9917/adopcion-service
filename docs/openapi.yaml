@@ -379,6 +379,11 @@ components:
         pictureCount:
           type: integer
           format: int32
+        firstPictureId:
+          type: integer
+          format: int64
+          nullable: true
+          description: ID of the first picture, or null if the pet has no pictures
         conditionsCount:
           type: integer
           format: int32

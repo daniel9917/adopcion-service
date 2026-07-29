@@ -62,6 +62,11 @@ public class PetService {
             for (byte[] pic : request.pictures()) {
                 PetPicture p = new PetPicture();
                 p.setData(pic);
+                try {
+                    p.setContentType(java.net.URLConnection.guessContentTypeFromStream(
+                            new java.io.ByteArrayInputStream(pic)));
+                } catch (java.io.IOException ignored) {
+                }
                 pet.addPicture(p);
             }
         }

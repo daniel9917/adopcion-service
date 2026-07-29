@@ -44,11 +44,6 @@ public class PetController {
         return toResponse(petService.getPet(petId));
     }
 
-    @GetMapping("/{petId}/picture")
-    public org.springframework.http.ResponseEntity<byte[]> getPetPicture(@PathVariable Long petId) {
-        return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.NOT_IMPLEMENTED).build();
-    }
-
     @GetMapping("/{petId}/pictures")
     public java.util.List<Long> listPetPictures(@PathVariable Long petId) {
         var pet = petService.getPet(petId);
@@ -84,6 +79,9 @@ public class PetController {
     }
 
     private PetResponse toResponse(Pet pet) {
+        Long firstPicId = (pet.getPictures() != null && !pet.getPictures().isEmpty())
+                ? pet.getPictures().getFirst().getId()
+                : null;
         return new PetResponse(
                 pet.getId(),
                 pet.getName(),
@@ -96,6 +94,7 @@ public class PetController {
                 pet.getCreatedAt(),
                 pet.getUpdatedAt(),
                 pet.getPictures() == null ? 0 : pet.getPictures().size(),
+                firstPicId,
                 pet.getSpecialConditions() == null ? 0 : pet.getSpecialConditions().size()
         );
     }

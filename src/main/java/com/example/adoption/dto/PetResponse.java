@@ -18,6 +18,7 @@ public record PetResponse(
         Instant createdAt,
         Instant updatedAt,
         int pictureCount,
+        Long firstPictureId,
         int conditionsCount
 ) {
 }
