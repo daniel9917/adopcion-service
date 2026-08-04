@@ -4,10 +4,14 @@ import com.example.adoption.domain.Breed;
 import com.example.adoption.domain.PetSex;
 import com.example.adoption.domain.PetStatus;
 import com.example.adoption.domain.Species;
+import com.example.adoption.domain.UserType;
 import com.example.adoption.model.Pet;
 import com.example.adoption.model.PetPicture;
+import com.example.adoption.model.User;
 import com.example.adoption.repository.ApplicationRepository;
 import com.example.adoption.repository.PetRepository;
+import com.example.adoption.repository.UserRepository;
+import com.example.adoption.security.JwtService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +24,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -38,10 +43,30 @@ class PetControllerTest {
     @Autowired
     private ApplicationRepository applicationRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private JwtService jwtService;
+
+    private String orgToken;
+
     @BeforeEach
     void setUp() {
         applicationRepository.deleteAll();
         petRepository.deleteAll();
+        userRepository.deleteAll();
+
+        User organization = new User();
+        organization.setUserType(UserType.ORGANIZATION);
+        organization.setName("Ana");
+        organization.setLastName("Gomez");
+        organization.setEmail("ana@org.com");
+        organization.setPassword("hash");
+        organization.setCity("Medellin");
+        organization.setPhoneNumber("+57 4 5555-5678");
+        User savedOrg = userRepository.save(organization);
+        orgToken = "Bearer " + jwtService.generateToken(savedOrg);
     }
 
     @Test
@@ -76,6 +101,7 @@ class PetControllerTest {
         Pet savedPet = petRepository.save(pet);
 
         mockMvc.perform(patch("/pets/{petId}", savedPet.getId())
+                        .header("Authorization", orgToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"description\":\"Updated description\"}"))
                 .andExpect(status().isOk())
@@ -189,6 +215,73 @@ class PetControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].name").value("Buddy"));
+    }
+
+    @Test
+    void shouldRejectCreatePetWithoutToken() throws Exception {
+        mockMvc.perform(post("/pets")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "name": "Milo",
+                                    "species": "FELINE",
+                                    "breed": "SIAMESE",
+                                    "sex": "MALE",
+                                    "ageMonths": 12,
+                                    "status": "AVAILABLE",
+                                    "pictures": ["AQID"]
+                                }
+                                """))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void shouldRejectCreatePetForRegularUser() throws Exception {
+        User regular = new User();
+        regular.setUserType(UserType.REGULAR);
+        regular.setName("Carlos");
+        regular.setLastName("Lopez");
+        regular.setEmail("carlos@example.com");
+        regular.setPassword("hash");
+        regular.setCity("Bogota");
+        regular.setPhoneNumber("+57 300 5555-1234");
+        regular = userRepository.save(regular);
+
+        mockMvc.perform(post("/pets")
+                        .header("Authorization", "Bearer " + jwtService.generateToken(regular))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "name": "Milo",
+                                    "species": "FELINE",
+                                    "breed": "SIAMESE",
+                                    "sex": "MALE",
+                                    "ageMonths": 12,
+                                    "status": "AVAILABLE",
+                                    "pictures": ["AQID"]
+                                }
+                                """))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void shouldCreatePetForOrganization() throws Exception {
+        mockMvc.perform(post("/pets")
+                        .header("Authorization", orgToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "name": "Milo",
+                                    "species": "FELINE",
+                                    "breed": "SIAMESE",
+                                    "sex": "MALE",
+                                    "ageMonths": 12,
+                                    "status": "AVAILABLE",
+                                    "pictures": ["AQID"]
+                                }
+                                """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.name").value("Milo"));
     }
 
     private Pet savePet(String name, Species species, Breed breed, PetSex sex, PetStatus status, Integer ageMonths) {
