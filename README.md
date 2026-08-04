@@ -8,7 +8,7 @@ Adoption Service is a Spring Boot 3 application for managing pets, pet pictures,
 - Store pet pictures as binary data in PostgreSQL
 - Support full pet replacement updates and partial patch updates with picture-list merging
 - Submit and review adoption applications
-- Basic HTTP security with role-based access for organization members
+- JWT authentication with role-based access control (REGULAR vs ORGANIZATION users)
 - OpenAPI 3 documentation via SpringDoc
 
 ## Project structure
@@ -47,12 +47,36 @@ mvn clean spring-boot:run
 
 The service will start on `http://localhost:8080`.
 
-## Default credentials
+## Authentication
 
-The application uses basic auth for protected endpoints.
+The service issues stateless JWT bearer tokens.
 
-- username: `admin`
-- password: `admin123`
+### Login
+
+```bash
+curl -X POST http://localhost:8080/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "user@example.com",
+    "password": "secret123"
+  }'
+```
+
+A successful login returns a JSON body with a `token` field plus user information.
+
+### Using the token
+
+Protected endpoints accept the token as a Bearer header:
+
+```bash
+curl http://localhost:8080/pets \
+  -H "Authorization: Bearer <token>"
+```
+
+### JWT configuration
+
+- `app.jwt.secret` – signing key (must be changed in production)
+- `app.jwt.expiration-ms` – token lifetime in milliseconds (default 24h)
 
 ## API documentation
 
@@ -62,6 +86,24 @@ The service exposes OpenAPI documentation at:
 - OpenAPI JSON: `http://localhost:8080/v3/api-docs`
 
 A static specification is also available in [docs/openapi.yaml](docs/openapi.yaml).
+
+## Access matrix
+
+| Endpoint | Access |
+| --- | --- |
+| `POST /auth/login` | Public |
+| `POST /users` | Public |
+| `GET /health` | Public |
+| `GET /pets` | Public |
+| `GET /pets/{petId}` | Public |
+| `GET /pets/{petId}/pictures` | Public |
+| `GET /pets/{petId}/pictures/{pictureId}` | Public |
+| `POST /pets` | `ORGANIZATION` only |
+| `PATCH /pets/{petId}` | `ORGANIZATION` only |
+| `POST /applications` | Any authenticated user (applicant is the token user) |
+| `GET /applications` | Authenticated (org sees all, regular sees own) |
+| `GET /applications/{applicationId}` | Authenticated (org any, regular own only) |
+| `PATCH /applications/{applicationId}` | `ORGANIZATION` only |
 
 ## Main endpoints
 
@@ -78,7 +120,9 @@ The PATCH payload uses optional fields. When the `pictures` array is included, t
 
 ### Applications
 
-- `POST /applications` – submit an adoption application
+- `POST /applications` – submit an adoption application (the authenticated user is the applicant)
+- `GET /applications` – list applications (organization users see all, regular users see only their own)
+- `GET /applications/{applicationId}` – get an application (organization users any, regular users only their own)
 - `PATCH /applications/{applicationId}` – review or update an application (organization member only)
 
 ### Example: create a pet with an image
@@ -86,7 +130,12 @@ The PATCH payload uses optional fields. When the `pictures` array is included, t
 The `pictures` field accepts base64-encoded image bytes. A valid example request is:
 
 ```bash
-curl -u admin:admin123 -X POST http://localhost:8080/pets \
+TOKEN=$(curl -s -X POST http://localhost:8080/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"ana@org.com","password":"orgpass456"}' | jq -r '.token')
+
+curl -X POST http://localhost:8080/pets \
+  -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Milo",

@@ -3,11 +3,14 @@ package com.example.adoption.controller;
 import com.example.adoption.dto.ApplicationCreateRequest;
 import com.example.adoption.dto.ApplicationResponse;
 import com.example.adoption.dto.ApplicationUpdateRequest;
-import com.example.adoption.model.AdoptionApplication;
+import com.example.adoption.model.User;
 import com.example.adoption.service.ApplicationService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/applications")
@@ -20,8 +23,18 @@ public class ApplicationController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ApplicationResponse createApplication(@Valid @RequestBody ApplicationCreateRequest request) {
-        return applicationService.createApplication(request);
+    public ApplicationResponse createApplication(@Valid @RequestBody ApplicationCreateRequest request, Authentication authentication) {
+        return applicationService.createApplication(request, (User) authentication.getPrincipal());
+    }
+
+    @GetMapping
+    public List<ApplicationResponse> listApplications(Authentication authentication) {
+        return applicationService.listApplications((User) authentication.getPrincipal());
+    }
+
+    @GetMapping("/{applicationId}")
+    public ApplicationResponse getApplication(@PathVariable Long applicationId, Authentication authentication) {
+        return applicationService.getApplication(applicationId, (User) authentication.getPrincipal());
     }
 
     @PatchMapping("/{applicationId}")

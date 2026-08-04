@@ -4,6 +4,7 @@ import java.time.Instant;
 
 public record ApplicationResponse(
         Long applicationId,
+        Long userId,
         Long petId,
         String applicantName,
         String applicantEmail,
