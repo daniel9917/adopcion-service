@@ -5,7 +5,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public record ApplicationCreateRequest(
-        @NotNull Long userId,
         @NotNull Long petId,
         @NotBlank String applicantName,
         @NotBlank @Email String applicantEmail,
