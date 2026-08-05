@@ -11,13 +11,16 @@ import com.example.adoption.model.Pet;
 import com.example.adoption.model.User;
 import com.example.adoption.repository.ApplicationRepository;
 import com.example.adoption.repository.PetRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 @Service
 public class ApplicationService {
+    private static final int MAX_PAGE_SIZE = 100;
+
     private final ApplicationRepository applicationRepository;
     private final PetRepository petRepository;
 
@@ -48,11 +51,14 @@ public class ApplicationService {
     }
 
     @Transactional(readOnly = true)
-    public List<ApplicationResponse> listApplications(User currentUser) {
-        List<AdoptionApplication> applications = (currentUser.getUserType() == UserType.ORGANIZATION)
-                ? applicationRepository.findAll()
-                : applicationRepository.findByUser(currentUser);
-        return applications.stream().map(this::toResponse).toList();
+    public Page<ApplicationResponse> listApplications(User currentUser, Pageable pageable) {
+        Pageable bounded = pageable.getPageSize() > MAX_PAGE_SIZE
+                ? PageRequest.of(pageable.getPageNumber(), MAX_PAGE_SIZE, pageable.getSort())
+                : pageable;
+        Page<AdoptionApplication> applications = (currentUser.getUserType() == UserType.ORGANIZATION)
+                ? applicationRepository.findAll(bounded)
+                : applicationRepository.findByUser(currentUser, bounded);
+        return applications.map(this::toResponse);
     }
 
     @Transactional(readOnly = true)

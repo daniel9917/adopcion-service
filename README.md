@@ -101,7 +101,7 @@ A static specification is also available in [docs/openapi.yaml](docs/openapi.yam
 | `POST /pets` | `ORGANIZATION` only |
 | `PATCH /pets/{petId}` | `ORGANIZATION` only |
 | `POST /applications` | Any authenticated user (applicant is the token user) |
-| `GET /applications` | Authenticated (org sees all, regular sees own) |
+| `GET /applications` | Authenticated (org sees all, regular sees own); paginated |
 | `GET /applications/{applicationId}` | Authenticated (org any, regular own only) |
 | `PATCH /applications/{applicationId}` | `ORGANIZATION` only |
 
@@ -121,7 +121,7 @@ The PATCH payload uses optional fields. When the `pictures` array is included, t
 ### Applications
 
 - `POST /applications` – submit an adoption application (the authenticated user is the applicant)
-- `GET /applications` – list applications (organization users see all, regular users see only their own)
+- `GET /applications` – list applications (organization users see all, regular users see only their own). Paginated via `?page=0&size=20&sort=createdAt,desc`; the response is a Spring Data `Page` (fields `content`, `totalElements`, `totalPages`, `number`, `size`).
 - `GET /applications/{applicationId}` – get an application (organization users any, regular users only their own)
 - `PATCH /applications/{applicationId}` – review or update an application (organization member only)
 

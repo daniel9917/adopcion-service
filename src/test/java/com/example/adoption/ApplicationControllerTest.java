@@ -172,8 +172,9 @@ class ApplicationControllerTest {
         mockMvc.perform(get("/applications")
                         .header("Authorization", "Bearer " + tokenFor(applicant)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].applicationId").value(ownId));
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content[0].applicationId").value(ownId))
+                .andExpect(jsonPath("$.totalElements").value(1));
     }
 
     @Test
@@ -184,9 +185,63 @@ class ApplicationControllerTest {
         mockMvc.perform(get("/applications")
                         .header("Authorization", "Bearer " + tokenFor(organization)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[*].applicationId", org.hamcrest.Matchers.containsInAnyOrder(
-                        firstId.intValue(), secondId.intValue())));
+                .andExpect(jsonPath("$.content", hasSize(2)))
+                .andExpect(jsonPath("$.content[*].applicationId", org.hamcrest.Matchers.containsInAnyOrder(
+                        firstId.intValue(), secondId.intValue())))
+                .andExpect(jsonPath("$.totalElements").value(2));
+    }
+
+    @Test
+    void organizationSeesPagedApplications() throws Exception {
+        createApplication(applicant, petId);
+        createApplication(applicant, petId);
+        createApplication(applicant, petId);
+
+        mockMvc.perform(get("/applications")
+                        .header("Authorization", "Bearer " + tokenFor(organization))
+                        .param("page", "0")
+                        .param("size", "2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(2)))
+                .andExpect(jsonPath("$.totalElements").value(3))
+                .andExpect(jsonPath("$.totalPages").value(2))
+                .andExpect(jsonPath("$.number").value(0));
+
+        mockMvc.perform(get("/applications")
+                        .header("Authorization", "Bearer " + tokenFor(organization))
+                        .param("page", "1")
+                        .param("size", "2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.totalElements").value(3));
+    }
+
+    @Test
+    void regularUserPaginatedSeesOnlyOwnApplications() throws Exception {
+        createApplication(applicant, petId);
+        createApplication(applicant, petId);
+        createApplicationFor(organization, petId);
+
+        mockMvc.perform(get("/applications")
+                        .header("Authorization", "Bearer " + tokenFor(applicant))
+                        .param("size", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.totalElements").value(2))
+                .andExpect(jsonPath("$.totalPages").value(2));
+    }
+
+    @Test
+    void organizationCanSortApplications() throws Exception {
+        Long firstId = createApplication(applicant, petId);
+        Long secondId = createApplication(applicant, petId);
+
+        mockMvc.perform(get("/applications")
+                        .header("Authorization", "Bearer " + tokenFor(organization))
+                        .param("sort", "id,desc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].applicationId").value(secondId))
+                .andExpect(jsonPath("$.content[1].applicationId").value(firstId));
     }
 
     @Test
