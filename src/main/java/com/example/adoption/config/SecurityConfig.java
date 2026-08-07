@@ -43,6 +43,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/health").permitAll()
                         .requestMatchers(HttpMethod.POST, "/users", "/auth/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/pets", "/pets/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/users/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/applications").authenticated()
                         .requestMatchers(HttpMethod.GET, "/applications", "/applications/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/pets").hasRole("ORGANIZATION")

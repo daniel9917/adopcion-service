@@ -3,6 +3,7 @@ package com.example.adoption;
 import com.example.adoption.domain.UserType;
 import com.example.adoption.model.User;
 import com.example.adoption.repository.UserRepository;
+import com.example.adoption.security.JwtService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.notNullValue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -28,9 +30,35 @@ class UserControllerTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private JwtService jwtService;
+
+    private User applicant;
+    private User organization;
+
     @BeforeEach
     void setUp() {
         userRepository.deleteAll();
+
+        applicant = new User();
+        applicant.setUserType(UserType.REGULAR);
+        applicant.setName("Carlos");
+        applicant.setLastName("Lopez");
+        applicant.setEmail("carlos.regular@example.com");
+        applicant.setPassword("hash");
+        applicant.setCity("Bogota");
+        applicant.setPhoneNumber("+57 300 5555-1234");
+        applicant = userRepository.save(applicant);
+
+        organization = new User();
+        organization.setUserType(UserType.ORGANIZATION);
+        organization.setName("Ana");
+        organization.setLastName("Gomez");
+        organization.setEmail("ana.org@example.com");
+        organization.setPassword("hash");
+        organization.setCity("Medellin");
+        organization.setPhoneNumber("+57 4 5555-5678");
+        organization = userRepository.save(organization);
     }
 
     @Test
@@ -169,5 +197,46 @@ class UserControllerTest {
                                 }
                                 """))
                 .andExpect(status().isConflict());
+    }
+
+    @Test
+    void regularUserCanReadOwnProfile() throws Exception {
+        mockMvc.perform(get("/users/{userId}", applicant.getId())
+                        .header("Authorization", "Bearer " + tokenFor(applicant)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(applicant.getId()))
+                .andExpect(jsonPath("$.userType").value("REGULAR"))
+                .andExpect(jsonPath("$.name").value("Carlos"))
+                .andExpect(jsonPath("$.lastName").value("Lopez"))
+                .andExpect(jsonPath("$.email").value("carlos.regular@example.com"))
+                .andExpect(jsonPath("$.city").value("Bogota"))
+                .andExpect(jsonPath("$.phoneNumber").value("+57 300 5555-1234"))
+                .andExpect(jsonPath("$.password").doesNotExist());
+    }
+
+    @Test
+    void regularUserCannotReadOtherUsersProfile() throws Exception {
+        mockMvc.perform(get("/users/{userId}", organization.getId())
+                        .header("Authorization", "Bearer " + tokenFor(applicant)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void organizationCanReadAnyUsersProfile() throws Exception {
+        mockMvc.perform(get("/users/{userId}", applicant.getId())
+                        .header("Authorization", "Bearer " + tokenFor(organization)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(applicant.getId()))
+                .andExpect(jsonPath("$.email").value("carlos.regular@example.com"));
+    }
+
+    @Test
+    void shouldRejectGetUserWhenNotAuthenticated() throws Exception {
+        mockMvc.perform(get("/users/{userId}", applicant.getId()))
+                .andExpect(status().isUnauthorized());
+    }
+
+    private String tokenFor(User user) {
+        return jwtService.generateToken(user);
     }
 }

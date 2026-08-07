@@ -233,6 +233,39 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserResponse'
+  /users/{userId}:
+    get:
+      summary: Get a user
+      description: >-
+        Organization users can read any user. Regular users can only read their own profile.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '403':
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /applications:
     get:
       summary: List adoption applications
