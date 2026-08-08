@@ -103,7 +103,7 @@ A static specification is also available in [docs/openapi.yaml](docs/openapi.yam
 | `POST /applications` | Any authenticated user (applicant is the token user) |
 | `GET /applications` | Authenticated (org sees all, regular sees own); paginated |
 | `GET /applications/{applicationId}` | Authenticated (org any, regular own only) |
-| `PATCH /applications/{applicationId}` | `ORGANIZATION` only |
+| `PATCH /applications/{applicationId}` | Authenticated; partial update. Status required; transitions constrained by role policy. REGULAR owners may patch only their own applications (NEEDS_INFO→PENDING). `ORGANIZATION` may patch any (PENDING→NEEDS_INFO/APPROVED/REJECTED, APPROVED→REJECTED/COMPLETED). `COMPLETED` marks the pet `ADOPTED`. |
 | `GET /applications/{applicationId}/review-notes` | Authenticated |
 | `POST /applications/{applicationId}/review-notes` | Authenticated owner of the application when status is `PENDING` or `NEEDS_INFO`, or `ORGANIZATION` at any time |
 
@@ -125,7 +125,7 @@ The PATCH payload uses optional fields. When the `pictures` array is included, t
 - `POST /applications` – submit an adoption application (the authenticated user is the applicant)
 - `GET /applications` – list applications (organization users see all, regular users see only their own). Paginated via `?page=0&size=20&sort=createdAt,desc`; the response is a Spring Data `Page` (fields `content`, `totalElements`, `totalPages`, `number`, `size`).
 - `GET /applications/{applicationId}` – get an application (organization users any, regular users only their own)
-- `PATCH /applications/{applicationId}` – review or update an application (organization member only)
+- `PATCH /applications/{applicationId}` – partially update an application. The payload always requires a `status`; `applicantName`, `applicantEmail`, `applicantPhone`, and `message` are optional and only present fields are updated. Status transitions are constrained by role: regular users may only move their own application from `NEEDS_INFO` back to `PENDING`; organization users may move `PENDING` to `NEEDS_INFO`/`APPROVED`/`REJECTED` and `APPROVED` to `REJECTED`/`COMPLETED`. A disallowed transition returns `409 Conflict`. Marking an application `COMPLETED` also marks the associated pet as `ADOPTED`.
 - `GET /applications/{applicationId}/review-notes` – list the review notes for an application (any authenticated user)
 - `POST /applications/{applicationId}/review-notes` – add a review note. Organization users can add notes to any application at any time; regular users can only add notes to applications they own while the status is `PENDING` or `NEEDS_INFO`.
 

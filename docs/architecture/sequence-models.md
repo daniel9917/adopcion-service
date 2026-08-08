@@ -269,29 +269,42 @@ sequenceDiagram
     Controller-->>Client: 201 Created + application JSON
 ```
 
-## 8. Review or update an application (organization)
+## 8. Partially update an adoption application (patch)
 
 Endpoint: PATCH /applications/{applicationId}
 
 ```mermaid
 sequenceDiagram
-    actor OrgMember as Organization Member
+    actor User as Authenticated User (owner or organization member)
     participant Controller as ApplicationController
     participant Service as ApplicationService
+    participant Policy as ApplicationStatusTransitionPolicy
     participant Repo as ApplicationRepository
     participant DB as Database
 
-    OrgMember->>Controller: PATCH /applications/{applicationId} with status
-    Controller->>Service: updateApplication(applicationId, request)
+    User->>Controller: PATCH /applications/{applicationId} with optional fields + status
+    Controller->>Service: patchApplication(applicationId, request, currentUser)
     Service->>Repo: findById(applicationId)
     Repo->>DB: SELECT * FROM applications WHERE id = ?
     DB-->>Repo: Application row
-    Service->>Repo: save(updatedApplication)
-    Repo->>DB: UPDATE applications SET status = ?
-    DB-->>Repo: updated row
-    Repo-->>Service: AdoptionApplication
-    Service-->>Controller: AdoptionApplication
-    Controller-->>OrgMember: 200 OK + application JSON
+    Service->>Service: if REGULAR, check application belongs to currentUser
+    Service->>Policy: isAllowed(userType, currentStatus, targetStatus)
+    Policy-->>Service: allowed?
+    alt transition not allowed
+        Service-->>Controller: ApplicationStatusTransitionException
+        Controller-->>User: 409 Conflict
+    else transition allowed
+        Service->>Service: apply only present optional fields, set status
+        opt target status is COMPLETED
+            Service->>Service: set pet status ADOPTED
+        end
+        Service->>Repo: save(updatedApplication)
+        Repo->>DB: UPDATE applications SET status = ?, applicant_* = ?
+        DB-->>Repo: updated row
+        Repo-->>Service: AdoptionApplication
+        Service-->>Controller: AdoptionApplication
+        Controller-->>User: 200 OK + application JSON
+    end
 ```
 
 ## 9. Add a review note to an application

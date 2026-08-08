@@ -59,6 +59,16 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
     }
 
+    @ExceptionHandler(ApplicationService.ApplicationStatusTransitionException.class)
+    public ResponseEntity<Map<String, Object>> handleStatusTransition(ApplicationService.ApplicationStatusTransitionException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", Instant.now());
+        body.put("status", HttpStatus.CONFLICT.value());
+        body.put("error", "Conflict");
+        body.put("message", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
     @ExceptionHandler(AdoptionApplicationReviewNoteService.ReviewNoteNotAllowedException.class)
     public ResponseEntity<Map<String, Object>> handleReviewNoteNotAllowed(
             AdoptionApplicationReviewNoteService.ReviewNoteNotAllowedException ex) {

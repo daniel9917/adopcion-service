@@ -50,7 +50,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/applications/*/review-notes").authenticated()
                         .requestMatchers(HttpMethod.POST, "/pets").hasRole("ORGANIZATION")
                         .requestMatchers(HttpMethod.PATCH, "/pets/**").hasRole("ORGANIZATION")
-                        .requestMatchers(HttpMethod.PATCH, "/applications/**").hasRole("ORGANIZATION")
+                        .requestMatchers(HttpMethod.PATCH, "/applications/**").authenticated()
                         .anyRequest().authenticated())
                 .formLogin((formLogin) -> formLogin.disable())
                 .httpBasic(AbstractHttpConfigurer::disable)

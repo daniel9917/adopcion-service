@@ -370,8 +370,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
     patch:
-      summary: Update an adoption application
-      description: Only organization users can review or update applications.
+      summary: Partially update an adoption application
+      description: >-
+        Any authenticated user can patch an application. Only the fields present in the
+        payload are updated; status is always required. Status transitions are constrained
+        by role: REGULAR owners may move their own NEEDS_INFO application to PENDING;
+        ORGANIZATION may move PENDING to NEEDS_INFO/APPROVED/REJECTED and APPROVED to
+        REJECTED/COMPLETED. Marking an application COMPLETED also marks the pet ADOPTED.
+        Regular users may only patch applications they own.
       security:
         - bearerAuth: []
       requestBody:
@@ -379,7 +385,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ApplicationUpdateRequest'
+              $ref: '#/components/schemas/ApplicationPatchRequest'
       responses:
         '200':
           description: Updated application
@@ -387,14 +393,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApplicationResponse'
-        '403':
-          description: Access denied
+        '400':
+          description: Validation failed or application not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Application not found
+        '403':
+          description: Access denied (regular user patching an application they do not own)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Status transition not allowed by the role policy
           content:
             application/json:
               schema:
@@ -763,13 +775,26 @@ components:
         message:
           type: string
           nullable: true
-    ApplicationUpdateRequest:
+    ApplicationPatchRequest:
       type: object
       required:
         - status
       properties:
         status:
           $ref: '#/components/schemas/ApplicationStatus'
+        applicantName:
+          type: string
+          nullable: true
+        applicantEmail:
+          type: string
+          format: email
+          nullable: true
+        applicantPhone:
+          type: string
+          nullable: true
+        message:
+          type: string
+          nullable: true
     AdoptionApplicationReviewNoteCreateRequest:
       type: object
       required:
@@ -858,6 +883,7 @@ components:
         - NEEDS_INFO
         - APPROVED
         - REJECTED
+        - COMPLETED
     ErrorResponse:
       type: object
       properties:

@@ -282,11 +282,10 @@ class ApplicationControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                    "status": "APPROVED",
-                                    "reviewNotes": "Looks good"
+                                    "status": "APPROVED"
                                 }
                                 """))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isConflict());
     }
 
     @Test
@@ -298,22 +297,252 @@ class ApplicationControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                    "status": "APPROVED",
-                                    "reviewNotes": "Looks good"
+                                    "status": "APPROVED"
                                 }
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("APPROVED"));
     }
 
+    @Test
+    void organizationCanMovePendingToNeedsInfo() throws Exception {
+        Long id = createApplication(applicant, petId);
+
+        mockMvc.perform(patch("/applications/{applicationId}", id)
+                        .header("Authorization", "Bearer " + tokenFor(organization))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "status": "NEEDS_INFO"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("NEEDS_INFO"));
+    }
+
+    @Test
+    void organizationCanRejectPendingApplication() throws Exception {
+        Long id = createApplication(applicant, petId);
+
+        mockMvc.perform(patch("/applications/{applicationId}", id)
+                        .header("Authorization", "Bearer " + tokenFor(organization))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "status": "REJECTED"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("REJECTED"));
+    }
+
+    @Test
+    void organizationCanRejectApprovedApplication() throws Exception {
+        Long id = createApplication(applicant, ApplicationStatus.APPROVED, petId);
+
+        mockMvc.perform(patch("/applications/{applicationId}", id)
+                        .header("Authorization", "Bearer " + tokenFor(organization))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "status": "REJECTED"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("REJECTED"));
+    }
+
+    @Test
+    void organizationCanCompleteApprovedApplicationAndMarkPetAdopted() throws Exception {
+        Long id = createApplication(applicant, ApplicationStatus.APPROVED, petId);
+
+        mockMvc.perform(patch("/applications/{applicationId}", id)
+                        .header("Authorization", "Bearer " + tokenFor(organization))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "status": "COMPLETED"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("COMPLETED"));
+
+        Pet pet = petRepository.findById(petId).orElseThrow();
+        org.assertj.core.api.Assertions.assertThat(pet.getStatus()).isEqualTo(PetStatus.ADOPTED);
+    }
+
+    @Test
+    void organizationCannotCompletePendingApplication() throws Exception {
+        Long id = createApplication(applicant, petId);
+
+        mockMvc.perform(patch("/applications/{applicationId}", id)
+                        .header("Authorization", "Bearer " + tokenFor(organization))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "status": "COMPLETED"
+                                }
+                                """))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void organizationCannotMoveNeedsInfoApplication() throws Exception {
+        Long id = createApplication(applicant, ApplicationStatus.NEEDS_INFO, petId);
+
+        mockMvc.perform(patch("/applications/{applicationId}", id)
+                        .header("Authorization", "Bearer " + tokenFor(organization))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "status": "APPROVED"
+                                }
+                                """))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void organizationCannotMoveRejectedApplication() throws Exception {
+        Long id = createApplication(applicant, ApplicationStatus.REJECTED, petId);
+
+        mockMvc.perform(patch("/applications/{applicationId}", id)
+                        .header("Authorization", "Bearer " + tokenFor(organization))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "status": "APPROVED"
+                                }
+                                """))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void organizationCannotUpdateToSameStatus() throws Exception {
+        Long id = createApplication(applicant, petId);
+
+        mockMvc.perform(patch("/applications/{applicationId}", id)
+                        .header("Authorization", "Bearer " + tokenFor(organization))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "status": "PENDING"
+                                }
+                                """))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void regularOwnerCanMoveNeedsInfoToPending() throws Exception {
+        Long id = createApplication(applicant, ApplicationStatus.NEEDS_INFO, petId);
+
+        mockMvc.perform(patch("/applications/{applicationId}", id)
+                        .header("Authorization", "Bearer " + tokenFor(applicant))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "status": "PENDING"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("PENDING"));
+    }
+
+    @Test
+    void regularOwnerCannotApproveOwnApplication() throws Exception {
+        Long id = createApplication(applicant, petId);
+
+        mockMvc.perform(patch("/applications/{applicationId}", id)
+                        .header("Authorization", "Bearer " + tokenFor(applicant))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "status": "APPROVED"
+                                }
+                                """))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void regularUserCannotPatchOtherUsersApplication() throws Exception {
+        Long id = createApplication(organization, ApplicationStatus.NEEDS_INFO, petId);
+
+        mockMvc.perform(patch("/applications/{applicationId}", id)
+                        .header("Authorization", "Bearer " + tokenFor(applicant))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "status": "PENDING"
+                                }
+                                """))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void patchOnlyUpdatesSentFields() throws Exception {
+        Long id = createApplication(applicant, petId);
+
+        mockMvc.perform(patch("/applications/{applicationId}", id)
+                        .header("Authorization", "Bearer " + tokenFor(organization))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "status": "NEEDS_INFO",
+                                    "applicantName": "Updated Name"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("NEEDS_INFO"))
+                .andExpect(jsonPath("$.applicantName").value("Updated Name"))
+                .andExpect(jsonPath("$.applicantEmail").value("carlos@example.com"))
+                .andExpect(jsonPath("$.applicantPhone").value("+54 11 5555-1234"));
+    }
+
+    @Test
+    void patchKeepsUnsentFieldsUnchanged() throws Exception {
+        Long id = createApplication(applicant, petId);
+
+        mockMvc.perform(patch("/applications/{applicationId}", id)
+                        .header("Authorization", "Bearer " + tokenFor(organization))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "status": "REJECTED"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("REJECTED"))
+                .andExpect(jsonPath("$.applicantName").value(applicant.getName() + " " + applicant.getLastName()))
+                .andExpect(jsonPath("$.applicantEmail").value("carlos@example.com"))
+                .andExpect(jsonPath("$.applicantPhone").value("+54 11 5555-1234"));
+    }
+
+    @Test
+    void patchRequiresStatus() throws Exception {
+        Long id = createApplication(applicant, petId);
+
+        mockMvc.perform(patch("/applications/{applicationId}", id)
+                        .header("Authorization", "Bearer " + tokenFor(organization))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "applicantName": "Updated Name"
+                                }
+                                """))
+                .andExpect(status().isBadRequest());
+    }
+
     private Long createApplication(User user, Long petId) {
+        return createApplication(user, ApplicationStatus.PENDING, petId);
+    }
+
+    private Long createApplication(User user, ApplicationStatus status, Long petId) {
         AdoptionApplication application = new AdoptionApplication();
         application.setPet(petRepository.findById(petId).orElseThrow());
         application.setUser(user);
         application.setApplicantName(user.getName() + " " + user.getLastName());
         application.setApplicantEmail(user.getEmail());
         application.setApplicantPhone("+54 11 5555-1234");
-        application.setStatus(ApplicationStatus.PENDING);
+        application.setStatus(status);
         return applicationRepository.save(application).getId();
     }
 

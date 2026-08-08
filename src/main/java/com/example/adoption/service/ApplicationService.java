@@ -4,6 +4,7 @@ import com.example.adoption.domain.ApplicationStatus;
 import com.example.adoption.domain.PetStatus;
 import com.example.adoption.domain.UserType;
 import com.example.adoption.dto.ApplicationCreateRequest;
+import com.example.adoption.dto.ApplicationPatchRequest;
 import com.example.adoption.dto.ApplicationResponse;
 import com.example.adoption.dto.ApplicationUpdateRequest;
 import com.example.adoption.model.AdoptionApplication;
@@ -81,6 +82,32 @@ public class ApplicationService {
         return toResponse(savedApplication);
     }
 
+    @Transactional
+    public ApplicationResponse patchApplication(Long applicationId, ApplicationPatchRequest request, User currentUser) {
+        AdoptionApplication application = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new IllegalArgumentException("Application not found"));
+        if (currentUser.getUserType() != UserType.ORGANIZATION && !application.getUser().getId().equals(currentUser.getId())) {
+            throw new AccessDeniedException("Application does not belong to the current user");
+        }
+        if (!ApplicationStatusTransitionPolicy.isAllowed(currentUser.getUserType(), application.getStatus(), request.status())) {
+            throw new ApplicationStatusTransitionException("Cannot transition application status from "
+                    + application.getStatus() + " to " + request.status() + " for user type " + currentUser.getUserType());
+        }
+
+        request.applicantName().ifPresent(application::setApplicantName);
+        request.applicantEmail().ifPresent(application::setApplicantEmail);
+        request.applicantPhone().ifPresent(application::setApplicantPhone);
+        request.message().ifPresent(application::setMessage);
+        application.setStatus(request.status());
+
+        if (application.getStatus() == ApplicationStatus.COMPLETED) {
+            application.getPet().setStatus(PetStatus.ADOPTED);
+        }
+
+        AdoptionApplication savedApplication = applicationRepository.save(application);
+        return toResponse(savedApplication);
+    }
+
     private ApplicationResponse toResponse(AdoptionApplication application) {
         return new ApplicationResponse(
                 application.getId(),
@@ -97,6 +124,12 @@ public class ApplicationService {
 
     public static class AccessDeniedException extends RuntimeException {
         public AccessDeniedException(String message) {
+            super(message);
+        }
+    }
+
+    public static class ApplicationStatusTransitionException extends RuntimeException {
+        public ApplicationStatusTransitionException(String message) {
             super(message);
         }
     }

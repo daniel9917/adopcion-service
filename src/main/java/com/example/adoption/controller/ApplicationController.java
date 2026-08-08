@@ -1,8 +1,8 @@
 package com.example.adoption.controller;
 
 import com.example.adoption.dto.ApplicationCreateRequest;
+import com.example.adoption.dto.ApplicationPatchRequest;
 import com.example.adoption.dto.ApplicationResponse;
-import com.example.adoption.dto.ApplicationUpdateRequest;
 import com.example.adoption.model.User;
 import com.example.adoption.service.ApplicationService;
 import jakarta.validation.Valid;
@@ -42,7 +42,7 @@ public class ApplicationController {
     }
 
     @PatchMapping("/{applicationId}")
-    public ApplicationResponse updateApplication(@PathVariable Long applicationId, @Valid @RequestBody ApplicationUpdateRequest request) {
-        return applicationService.updateApplication(applicationId, request);
+    public ApplicationResponse patchApplication(@PathVariable Long applicationId, @Valid @RequestBody ApplicationPatchRequest request, Authentication authentication) {
+        return applicationService.patchApplication(applicationId, request, (User) authentication.getPrincipal());
     }
 }
