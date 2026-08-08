@@ -2,6 +2,8 @@ package com.example.adoption;
 
 import com.example.adoption.domain.UserType;
 import com.example.adoption.model.User;
+import com.example.adoption.repository.AdoptionApplicationReviewNoteRepository;
+import com.example.adoption.repository.ApplicationRepository;
 import com.example.adoption.repository.UserRepository;
 import com.example.adoption.security.JwtService;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,6 +33,12 @@ class UserControllerTest {
     private UserRepository userRepository;
 
     @Autowired
+    private ApplicationRepository applicationRepository;
+
+    @Autowired
+    private AdoptionApplicationReviewNoteRepository reviewNoteRepository;
+
+    @Autowired
     private JwtService jwtService;
 
     private User applicant;
@@ -38,6 +46,8 @@ class UserControllerTest {
 
     @BeforeEach
     void setUp() {
+        reviewNoteRepository.deleteAll();
+        applicationRepository.deleteAll();
         userRepository.deleteAll();
 
         applicant = new User();

@@ -1,5 +1,6 @@
 package com.example.adoption.controller;
 
+import com.example.adoption.service.AdoptionApplicationReviewNoteService;
 import com.example.adoption.service.ApplicationService;
 import com.example.adoption.service.AuthService;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -56,6 +57,17 @@ public class GlobalExceptionHandler {
         body.put("error", "Forbidden");
         body.put("message", ex.getMessage());
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+    }
+
+    @ExceptionHandler(AdoptionApplicationReviewNoteService.ReviewNoteNotAllowedException.class)
+    public ResponseEntity<Map<String, Object>> handleReviewNoteNotAllowed(
+            AdoptionApplicationReviewNoteService.ReviewNoteNotAllowedException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", Instant.now());
+        body.put("status", HttpStatus.NOT_ACCEPTABLE.value());
+        body.put("error", "Not Acceptable");
+        body.put("message", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(body);
     }
 
     @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)

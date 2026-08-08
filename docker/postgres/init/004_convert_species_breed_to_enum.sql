@@ -5,8 +5,10 @@ UPDATE pets SET breed = 'LABRADOR' WHERE breed = 'Labrador';
 UPDATE pets SET breed = 'SIAMESE' WHERE breed = 'Siamese';
 UPDATE pets SET breed = 'MIXED' WHERE breed = 'Mixed Breed';
 
+ALTER TABLE pets DROP CONSTRAINT IF EXISTS chk_species;
 ALTER TABLE pets ADD CONSTRAINT chk_species
     CHECK (species IN ('FELINE', 'CANINE'));
+ALTER TABLE pets DROP CONSTRAINT IF EXISTS chk_breed;
 ALTER TABLE pets ADD CONSTRAINT chk_breed
     CHECK (breed IN ('SIAMESE','PERSIAN','MAINE_COON','RAGDOLL','BENGAL',
                      'BRITISH_SHORTHAIR','ABYSSINIAN','RUSSIAN_BLUE',

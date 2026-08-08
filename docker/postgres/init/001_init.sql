@@ -51,7 +51,15 @@ CREATE TABLE IF NOT EXISTS applications (
     message TEXT,
     status VARCHAR(20) NOT NULL DEFAULT 'PENDING'
         CHECK (status IN ('PENDING', 'NEEDS_INFO', 'APPROVED', 'REJECTED')),
-    review_notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS adoption_application_review_notes (
+    id BIGSERIAL PRIMARY KEY,
+    adoption_application_id BIGINT NOT NULL REFERENCES applications(id) ON DELETE CASCADE,
+    user_id BIGINT NOT NULL REFERENCES users(id),
+    note VARCHAR(2000),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -60,6 +68,8 @@ CREATE INDEX IF NOT EXISTS idx_pets_status ON pets(status);
 CREATE INDEX IF NOT EXISTS idx_applications_user_id ON applications(user_id);
 CREATE INDEX IF NOT EXISTS idx_applications_pet_id ON applications(pet_id);
 CREATE INDEX IF NOT EXISTS idx_applications_status ON applications(status);
+CREATE INDEX IF NOT EXISTS idx_review_notes_application_id ON adoption_application_review_notes(adoption_application_id);
+CREATE INDEX IF NOT EXISTS idx_review_notes_user_id ON adoption_application_review_notes(user_id);
 
 INSERT INTO users (user_type, name, last_name, email, password, city, phone_number)
 VALUES

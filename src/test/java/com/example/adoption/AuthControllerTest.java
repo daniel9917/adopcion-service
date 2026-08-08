@@ -2,6 +2,8 @@ package com.example.adoption;
 
 import com.example.adoption.domain.UserType;
 import com.example.adoption.model.User;
+import com.example.adoption.repository.AdoptionApplicationReviewNoteRepository;
+import com.example.adoption.repository.ApplicationRepository;
 import com.example.adoption.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,10 +31,18 @@ class AuthControllerTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private ApplicationRepository applicationRepository;
+
+    @Autowired
+    private AdoptionApplicationReviewNoteRepository reviewNoteRepository;
+
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @BeforeEach
     void setUp() {
+        reviewNoteRepository.deleteAll();
+        applicationRepository.deleteAll();
         userRepository.deleteAll();
     }
 

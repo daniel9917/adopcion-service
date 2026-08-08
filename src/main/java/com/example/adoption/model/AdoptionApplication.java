@@ -3,6 +3,7 @@ package com.example.adoption.model;
 import com.example.adoption.domain.ApplicationStatus;
 import jakarta.persistence.*;
 import java.time.Instant;
+import java.util.List;
 
 @Entity
 @Table(name = "applications")
@@ -14,6 +15,9 @@ public class AdoptionApplication {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pet_id", nullable = false)
     private Pet pet;
+
+    @OneToMany(mappedBy = "adoptionApplication", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<AdoptionApplicationReviewNote> reviewNotes;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -34,9 +38,6 @@ public class AdoptionApplication {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ApplicationStatus status;
-
-    @Column(name = "review_notes", length = 2000)
-    private String reviewNotes;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -71,8 +72,8 @@ public class AdoptionApplication {
     public void setMessage(String message) { this.message = message; }
     public ApplicationStatus getStatus() { return status; }
     public void setStatus(ApplicationStatus status) { this.status = status; }
-    public String getReviewNotes() { return reviewNotes; }
-    public void setReviewNotes(String reviewNotes) { this.reviewNotes = reviewNotes; }
+    public List<AdoptionApplicationReviewNote> getReviewNotes() { return reviewNotes; }
+    public void setReviewNotes(List<AdoptionApplicationReviewNote> reviewNotes) { this.reviewNotes = reviewNotes; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
 }

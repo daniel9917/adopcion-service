@@ -104,6 +104,8 @@ A static specification is also available in [docs/openapi.yaml](docs/openapi.yam
 | `GET /applications` | Authenticated (org sees all, regular sees own); paginated |
 | `GET /applications/{applicationId}` | Authenticated (org any, regular own only) |
 | `PATCH /applications/{applicationId}` | `ORGANIZATION` only |
+| `GET /applications/{applicationId}/review-notes` | Authenticated |
+| `POST /applications/{applicationId}/review-notes` | Authenticated owner of the application when status is `PENDING` or `NEEDS_INFO`, or `ORGANIZATION` at any time |
 
 ## Main endpoints
 
@@ -124,6 +126,8 @@ The PATCH payload uses optional fields. When the `pictures` array is included, t
 - `GET /applications` – list applications (organization users see all, regular users see only their own). Paginated via `?page=0&size=20&sort=createdAt,desc`; the response is a Spring Data `Page` (fields `content`, `totalElements`, `totalPages`, `number`, `size`).
 - `GET /applications/{applicationId}` – get an application (organization users any, regular users only their own)
 - `PATCH /applications/{applicationId}` – review or update an application (organization member only)
+- `GET /applications/{applicationId}/review-notes` – list the review notes for an application (any authenticated user)
+- `POST /applications/{applicationId}/review-notes` – add a review note. Organization users can add notes to any application at any time; regular users can only add notes to applications they own while the status is `PENDING` or `NEEDS_INFO`.
 
 ### Example: create a pet with an image
 

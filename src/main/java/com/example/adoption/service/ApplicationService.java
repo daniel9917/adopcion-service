@@ -76,7 +76,7 @@ public class ApplicationService {
         AdoptionApplication application = applicationRepository.findById(applicationId)
                 .orElseThrow(() -> new IllegalArgumentException("Application not found"));
         application.setStatus(request.status());
-        application.setReviewNotes(request.reviewNotes());
+        // application.setReviewNotes(request.reviewNotes());
         AdoptionApplication savedApplication = applicationRepository.save(application);
         return toResponse(savedApplication);
     }

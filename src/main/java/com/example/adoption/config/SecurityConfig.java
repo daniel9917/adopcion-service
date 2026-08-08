@@ -46,6 +46,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/users/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/applications").authenticated()
                         .requestMatchers(HttpMethod.GET, "/applications", "/applications/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/applications/*/review-notes").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/applications/*/review-notes").authenticated()
                         .requestMatchers(HttpMethod.POST, "/pets").hasRole("ORGANIZATION")
                         .requestMatchers(HttpMethod.PATCH, "/pets/**").hasRole("ORGANIZATION")
                         .requestMatchers(HttpMethod.PATCH, "/applications/**").hasRole("ORGANIZATION")

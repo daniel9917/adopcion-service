@@ -399,6 +399,74 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /applications/{applicationId}/review-notes:
+    parameters:
+      - name: applicationId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+    get:
+      summary: List review notes for an adoption application
+      description: >-
+        Any authenticated user can list the review notes attached to an application.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of review notes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AdoptionApplicationReviewNoteResponse'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      summary: Add a review note to an adoption application
+      description: >-
+        Organization users can add review notes to any application at any time.
+        Regular users can only add review notes to applications they own while the
+        application status is PENDING or NEEDS_INFO.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdoptionApplicationReviewNoteCreateRequest'
+      responses:
+        '201':
+          description: Created review note
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdoptionApplicationReviewNoteResponse'
+        '400':
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '406':
+          description: Review note posting is not allowed for this user and application status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   securitySchemes:
     bearerAuth:
@@ -702,9 +770,26 @@ components:
       properties:
         status:
           $ref: '#/components/schemas/ApplicationStatus'
-        reviewNotes:
+    AdoptionApplicationReviewNoteCreateRequest:
+      type: object
+      required:
+        - note
+      properties:
+        note:
           type: string
-          nullable: true
+    AdoptionApplicationReviewNoteResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        note:
+          type: string
+        createdBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
     ApplicationResponse:
       type: object
       properties:
@@ -729,9 +814,6 @@ components:
           nullable: true
         status:
           $ref: '#/components/schemas/ApplicationStatus'
-        reviewNotes:
-          type: string
-          nullable: true
         createdAt:
           type: string
           format: date-time

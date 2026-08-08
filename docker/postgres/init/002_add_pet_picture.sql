@@ -26,6 +26,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS pet_pictures_ensure_has_one_picture ON pet_pictures;
+
 CREATE TRIGGER pet_pictures_ensure_has_one_picture
 BEFORE DELETE OR UPDATE OF pet_id ON pet_pictures
 FOR EACH ROW

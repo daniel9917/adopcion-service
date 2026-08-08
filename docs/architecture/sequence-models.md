@@ -60,6 +60,44 @@ erDiagram
     PETS ||--o{ PET_PICTURES : has
 ```
 
+Review notes are stored in a separate `adoption_application_review_notes` table linked to the application and to the user who wrote the note:
+
+```mermaid
+erDiagram
+    APPLICATIONS {
+      bigint id PK
+      bigint pet_id FK
+      bigint user_id FK
+      varchar applicant_name
+      varchar applicant_email
+      varchar applicant_phone
+      text message
+      varchar status
+      timestamp created_at
+      timestamp updated_at
+    }
+    USERS {
+      bigint id PK
+      varchar user_type
+      varchar name
+      varchar last_name
+      varchar email
+      varchar password
+      varchar city
+      varchar phone_number
+    }
+    ADOPTION_APPLICATION_REVIEW_NOTES {
+      bigint id PK
+      bigint adoption_application_id FK
+      bigint user_id FK
+      varchar note
+      timestamp created_at
+      timestamp updated_at
+    }
+    APPLICATIONS ||--o{ ADOPTION_APPLICATION_REVIEW_NOTES : has
+    USERS ||--o{ ADOPTION_APPLICATION_REVIEW_NOTES : writes
+```
+
 ## 1. List available pets
 
 Endpoint: GET /pets
@@ -243,15 +281,68 @@ sequenceDiagram
     participant Repo as ApplicationRepository
     participant DB as Database
 
-    OrgMember->>Controller: PATCH /applications/{applicationId} with status/review notes
+    OrgMember->>Controller: PATCH /applications/{applicationId} with status
     Controller->>Service: updateApplication(applicationId, request)
     Service->>Repo: findById(applicationId)
     Repo->>DB: SELECT * FROM applications WHERE id = ?
     DB-->>Repo: Application row
     Service->>Repo: save(updatedApplication)
-    Repo->>DB: UPDATE applications SET status = ?, review_notes = ?
+    Repo->>DB: UPDATE applications SET status = ?
     DB-->>Repo: updated row
     Repo-->>Service: AdoptionApplication
     Service-->>Controller: AdoptionApplication
     Controller-->>OrgMember: 200 OK + application JSON
+```
+
+## 9. Add a review note to an application
+
+Endpoint: POST /applications/{applicationId}/review-notes
+
+```mermaid
+sequenceDiagram
+    actor User as User (owner or organization member)
+    participant Controller as AdoptionApplicationReviewNoteController
+    participant Service as AdoptionApplicationReviewNoteService
+    participant AppRepo as ApplicationRepository
+    participant NoteRepo as AdoptionApplicationReviewNoteRepository
+    participant DB as Database
+
+    User->>Controller: POST /applications/{applicationId}/review-notes with note
+    Controller->>Service: createReviewNote(applicationId, request, currentUser)
+    Service->>AppRepo: findById(applicationId)
+    AppRepo->>DB: SELECT * FROM applications WHERE id = ?
+    DB-->>AppRepo: Application row
+    Service->>Service: check owner + PENDING/NEEDS_INFO, or ORGANIZATION
+    Service->>NoteRepo: save(reviewNote)
+    NoteRepo->>DB: INSERT INTO adoption_application_review_notes (note, ...)
+    DB-->>NoteRepo: inserted row
+    NoteRepo-->>Service: AdoptionApplicationReviewNote
+    Service-->>Controller: AdoptionApplicationReviewNoteResponse
+    Controller-->>User: 201 Created + review note JSON
+```
+
+## 10. List review notes for an application
+
+Endpoint: GET /applications/{applicationId}/review-notes
+
+```mermaid
+sequenceDiagram
+    actor User as Authenticated User
+    participant Controller as AdoptionApplicationReviewNoteController
+    participant Service as AdoptionApplicationReviewNoteService
+    participant AppRepo as ApplicationRepository
+    participant NoteRepo as AdoptionApplicationReviewNoteRepository
+    participant DB as Database
+
+    User->>Controller: GET /applications/{applicationId}/review-notes
+    Controller->>Service: listReviewNotes(applicationId, currentUser)
+    Service->>AppRepo: findById(applicationId)
+    AppRepo->>DB: SELECT * FROM applications WHERE id = ?
+    DB-->>AppRepo: Application row
+    Service->>NoteRepo: findByAdoptionApplication(application)
+    NoteRepo->>DB: SELECT * FROM adoption_application_review_notes WHERE adoption_application_id = ?
+    DB-->>NoteRepo: note rows
+    NoteRepo-->>Service: List<AdoptionApplicationReviewNote>
+    Service-->>Controller: List<AdoptionApplicationReviewNoteResponse>
+    Controller-->>User: 200 OK + review notes JSON
 ```
